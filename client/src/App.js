@@ -10,9 +10,11 @@ import Menu from './components/Menu'; // Menu로 변경
 import Login2 from './components/Login2';
 import Mui from './components/Mui';
 
+import Instalogin from './components/Instalogin';
+
 function App() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/' || location.pathname === '/join';
+  const isAuthPage = location.pathname === '/' || location.pathname === '/join' || location.pathname === '/instalogin';
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -27,6 +29,8 @@ function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login2" element={<Login2 />} />
           <Route path="/mui" element={<Mui />} />
+
+          <Route path="/instalogin" element={<Instalogin />} />
         </Routes>
       </Box>
     </Box>
