@@ -10,12 +10,9 @@ import Menu from './components/Menu'; // Menu로 변경
 import Login2 from './components/Login2';
 import Mui from './components/Mui';
 
-import InstaLogin from './components/InstaLogin';
-import InstaJoin from './components/InstaJoin';
-
 function App() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/' || location.pathname === '/join' || location.pathname === '/instalogin' || location.pathname === '/instajoin';
+  const isAuthPage = location.pathname === '/' || location.pathname === '/join';
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -30,9 +27,6 @@ function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login2" element={<Login2 />} />
           <Route path="/mui" element={<Mui />} />
-
-          <Route path="/instalogin" element={<InstaLogin />} />
-          <Route path="/instajoin" element={<InstaJoin />} />
         </Routes>
       </Box>
     </Box>

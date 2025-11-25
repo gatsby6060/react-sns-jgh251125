@@ -8,45 +8,37 @@ import {
   Link as MuiLink,
   Paper,
   Divider,
-  Container,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 
-// 로컬 업로드 파일 경로(내가 제공한 경로 사용)
-// const hero = "/mnt/data/00bf334c-3853-4882-9ced-83538911fac8.png";
-
-// 또는 외부 URL을 직접 쓰려면 아래처럼:
-// let hero = "https://www.instagram.com/images/assets_DO_NOT_HARDCODE/lox_brand/landing-2x.png";
+// 로컬 업로드 파일 경로
 let hero = "/insta-hero.png";
 
-export default function Login() {
-  const userId = useRef();
-  const pwd = useRef();
-  const navigate = useNavigate();
+function Instalogin() {
+  let userId = useRef();
+  let pwd = useRef();
+  let navigate = useNavigate();
 
-  const doLogin = async () => {
-    const param = {
-      userId: userId.current?.value || "",
-      pwd: pwd.current?.value || "",
+  function doLogin() {
+    let param = {
+      userId: userId.current.value,
+      pwd: pwd.current.value,
     };
 
-    try {
-      const res = await fetch("http://localhost:3010/user/login", {
-        method: "POST",
-        headers: { "Content-type": "application/json" },
-        body: JSON.stringify(param),
-      });
-      const data = await res.json();
-      alert(data.msg);
-      if (data.result) {
-        localStorage.setItem("token", data.token);
-        navigate("/feed");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("로그인 중 오류가 발생했습니다.");
-    }
-  };
+    fetch("http://localhost:3010/user/login", {
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify(param),
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.msg);
+        if (data.result) {
+          localStorage.setItem("token", data.token);
+          navigate("/feed");
+        }
+      })
+  }
 
   return (
     <Box
@@ -54,53 +46,57 @@ export default function Login() {
         minHeight: '100vh',
         display: 'flex',
         bgcolor: '#fafafa',
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: { xs: 2, md: 4 },
       }}
     >
-      {/* LEFT - hero artwork: md 이상에서만 보이게 */}
+      {/* 중앙 컨테이너 - 이미지와 로그인 폼을 나란히 배치 */}
       <Box
         sx={{
-          // flex: 1.1,
-          display: { xs: 'none', md: 'flex' },
+          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 6,
+          gap: { xs: 0, md: 8 },
+          maxWidth: { xs: '100%', md: '935px' },
+          width: '100%',
         }}
       >
+        {/* LEFT - hero artwork: md 이상에서만 보이게 */}
         <Box
           sx={{
-            width: 650,
-            maxWidth: '90%',
-            position: 'relative',
-            boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
-            borderRadius: 3,
-            overflow: 'visible',
-            background: 'transparent',
-            transform: 'none',
+            display: { xs: 'none', md: 'flex' },
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: '0 0 auto',
           }}
         >
-          {/* 이미지가 카드처럼 보이도록 살짝 여백/그림자 적용 */}
-          <img
-            src={hero}
-            alt="instagram-hero"
-            style={{
-              width: '100%',
-              // width: '1000px',
-              display: 'block',
-              borderRadius: 12,
+          <Box
+            sx={{
+              width: 380,
+              position: 'relative',
             }}
-          />
+          >
+            <img
+              src={hero}
+              alt="instagram-hero"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+              }}
+            />
+          </Box>
         </Box>
-      </Box>
 
-      {/* RIGHT - login card centered */}
-      <Container maxWidth="sm" sx={{ display: 'flex', alignItems: 'center'}} >
+        {/* RIGHT - login card */}
         <Box
           sx={{
             width: '100%',
-            maxWidth: 380,
-            mx: 'auto',
-            my: { xs: 6, md: 0 },
+            maxWidth: 350,
+            flex: '0 0 auto',
             textAlign: 'center',
+            my: { xs: 4, md: 0 },
           }}
         >
           {/* logo */}
@@ -160,12 +156,28 @@ export default function Login() {
             </Box>
 
             <Button
-              startIcon={<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877f2" d="M22 12a10 10 0 10-11.5 9.9v-7H8v-3h2.5V9.5c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12H22z"/></svg>}
+              startIcon={
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none"
+                  style={{ display: 'block', flexShrink: 0 }}
+                >
+                  <path 
+                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" 
+                    fill="#1877f2"
+                  />
+                </svg>
+              }
               sx={{
                 mt: 1,
                 color: '#385898',
                 textTransform: 'none',
                 fontWeight: 600,
+                '& .MuiButton-startIcon': {
+                  marginRight: 1,
+                },
               }}
               fullWidth
             >
@@ -183,7 +195,7 @@ export default function Login() {
           <Paper elevation={0} sx={{ p: 2, mb: 3 }}>
             <Typography variant="body2">
               계정이 없으신가요?{' '}
-              <MuiLink component={Link} to="/join" underline="hover">
+              <MuiLink component={Link} to="/instajoin" underline="hover">
                 회원가입
               </MuiLink>
             </Typography>
@@ -199,7 +211,9 @@ export default function Login() {
             </Typography>
           </Box>
         </Box>
-      </Container>
+      </Box>
     </Box>
   );
 }
+
+export default Instalogin;

@@ -3,7 +3,6 @@ const cors = require('cors')
 const path = require('path');
 const userRouter = require("./routes/user");
 const feedRouter = require("./routes/feed");
-const instaUserRouter = require("./routes/insta_user");
 
 const app = express()
 app.use(cors({
@@ -17,7 +16,6 @@ app.use("/uploads", express.static(path.join(__dirname,"uploads")) );
 //라우터 영역
 app.use("/user", userRouter);
 app.use("/feed", feedRouter);
-app.use("/insta_user", instaUserRouter);
 
 
 
