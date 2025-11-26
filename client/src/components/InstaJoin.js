@@ -13,7 +13,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function InstaJoin() {
   let navigate = useNavigate();
-  let emailRef = useRef();
+  let emailorphoneRef = useRef();
   let pwdRef = useRef();
   let fullNameRef = useRef();
   let userNameRef = useRef();
@@ -23,10 +23,10 @@ function InstaJoin() {
       userId: userNameRef.current.value,
       pwd: pwdRef.current.value,
       userName: fullNameRef.current.value,
-      email: emailRef.current.value
+      emailorphone: emailorphoneRef.current.value
     };
 
-    fetch("http://localhost:3010/insta_user/join", {
+    fetch("http://localhost:3010/instauser/join", {
       method: "POST",
       headers: { "Content-type": "application/json" },
       body: JSON.stringify(param),
@@ -123,7 +123,7 @@ function InstaJoin() {
 
             {/* 입력 필드들 */}
             <TextField
-              inputRef={emailRef}
+              inputRef={emailorphoneRef}
               label="휴대폰 번호 또는 이메일 주소"
               variant="outlined"
               margin="dense"

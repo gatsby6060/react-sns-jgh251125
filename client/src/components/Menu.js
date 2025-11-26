@@ -18,9 +18,15 @@ function Menu() {
     >
       <Toolbar />
       <Typography variant="h6" component="div" sx={{ p: 2 }}>
-        SNS 메뉴
+        Instagram
       </Typography>
       <List>
+        <ListItem button component={Link} to="/instahome">
+          <ListItemIcon>
+            <Home />
+          </ListItemIcon>
+          <ListItemText primary="홈" />
+        </ListItem>
         <ListItem button component={Link} to="/feed">
           <ListItemIcon>
             <Home />

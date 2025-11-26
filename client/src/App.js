@@ -10,8 +10,11 @@ import Menu from './components/Menu'; // Menu로 변경
 import Login2 from './components/Login2';
 import Mui from './components/Mui';
 
+//새로 추가하는건 모두 Insta로 붙임
 import InstaLogin from './components/InstaLogin';
 import InstaJoin from './components/InstaJoin';
+import InstaHome from './components/InstaHome';
+import InstaMenu from './components/InstaMenu'; // Menu로 변경
 
 function App() {
   const location = useLocation();
@@ -20,7 +23,7 @@ function App() {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      {!isAuthPage && <Menu />} {/* 로그인과 회원가입 페이지가 아닐 때만 Menu 렌더링 */}
+      {!isAuthPage && <InstaMenu />} {/* 로그인과 회원가입 페이지가 아닐 때는 Menu 렌더링 */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -33,6 +36,7 @@ function App() {
 
           <Route path="/instalogin" element={<InstaLogin />} />
           <Route path="/instajoin" element={<InstaJoin />} />
+          <Route path="/instahome" element={<InstaHome />} />
         </Routes>
       </Box>
     </Box>

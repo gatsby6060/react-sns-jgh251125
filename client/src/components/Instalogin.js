@@ -10,35 +10,15 @@ import {
   Divider,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
+import hero from '../assets/insta-hero.png'; // 현재 파일 위치에 따라 경로 조정
 
 // 로컬 업로드 파일 경로
-let hero = "/insta-hero.png";
+// let hero = "../src/assets/insta-hero.png";
 
-function Instalogin() {
+function InstaLogin() {
   let userId = useRef();
   let pwd = useRef();
   let navigate = useNavigate();
-
-  function doLogin() {
-    let param = {
-      userId: userId.current.value,
-      pwd: pwd.current.value,
-    };
-
-    fetch("http://localhost:3010/user/login", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify(param),
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.msg);
-        if (data.result) {
-          localStorage.setItem("token", data.token);
-          navigate("/feed");
-        }
-      })
-  }
 
   return (
     <Box
@@ -135,7 +115,30 @@ function Instalogin() {
             <Button
               fullWidth
               variant="contained"
-              onClick={doLogin}
+              onClick={() => {
+                let param = {
+                  userId: userId.current.value,
+                  pwd: pwd.current.value,
+                };
+
+                fetch("http://localhost:3010/instauser/login", {
+                  method: "POST",
+                  headers: { "Content-type": "application/json" },
+                  body: JSON.stringify(param),
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    alert(data.msg);
+                    if (data.result) {
+                      localStorage.setItem("token", data.token);
+                      navigate("/instaMenu");
+                    }
+                  })
+                  .catch(err => {
+                    console.error(err);
+                    alert("서버 통신 중 오류가 발생했습니다.");
+                  });
+              }}
               sx={{
                 mt: 2,
                 mb: 1,
@@ -156,30 +159,33 @@ function Instalogin() {
             </Box>
 
             <Button
+              // startIcon : 버튼 왼쪽에 아이콘을 넣는 MUI 속성
               startIcon={
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  style={{ display: 'block', flexShrink: 0 }}
+                // 여기가 아이콘 부분인데, '이미지 파일'이 아니라 'SVG 그림 코드'
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"  // SVG 내부 좌표 설정 (보통 아이콘에서 많이 쓰는 기본값)
+                  fill="none" // 기본 채움색 없음
+                  style={{ display: 'block', flexShrink: 0 }} // inline 요소 말고 block처럼 보이게 flex 안에서 아이콘이 줄어들지 않게 0
                 >
-                  <path 
-                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" 
-                    fill="#1877f2"
+                  {/* <path> : SVG의 실제 그림을 그리는 부분 */}
+                  <path
+                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                    fill="#1877f2"  // 아이콘 색 (페이스북 파란색)
                   />
                 </svg>
               }
-              sx={{
-                mt: 1,
+              sx={{ //MUI(Material UI)에서 스타일을 주는 공식적인 방법
+                mt: 1, //margin-top: theme.spacing(1) (보통 8px)
                 color: '#385898',
-                textTransform: 'none',
-                fontWeight: 600,
-                '& .MuiButton-startIcon': {
+                textTransform: 'none', //버튼에서 자동 대문자 변환을 끔
+                fontWeight: 600, // 폰트 굵기
+                '& .MuiButton-startIcon': { //버튼 내 아이콘과 텍스트 사이 간격 조절
                   marginRight: 1,
                 },
               }}
-              fullWidth
+              fullWidth // 버튼이 가로 전체를 차지하게 함 (여기까지 버튼 시작부분)
             >
               Facebook으로 로그인
             </Button>
@@ -195,9 +201,25 @@ function Instalogin() {
           <Paper elevation={0} sx={{ p: 2, mb: 3 }}>
             <Typography variant="body2">
               계정이 없으신가요?{' '}
-              <MuiLink component={Link} to="/instajoin" underline="hover">
+              <Link
+                to="/instajoin"
+                style={{
+                  textDecoration: 'none',
+                  color: '#385898',
+                  fontWeight: 'bold',     // 글자 굵게
+                }}
+                // onMouseEnter={(e) => {
+                //   e.target.style.textDecoration = 'underline'; // hover 시 밑줄
+                // }}
+                // onMouseLeave={(e) => {
+                //   e.target.style.textDecoration = 'none'; // hover 벗어나면 원래대로
+                // }}
+              >
                 회원가입
-              </MuiLink>
+              </Link>
+              {/* <MuiLink component={Link} to="/instajoin" underline="hover">
+                회원가입
+              </MuiLink> */}
             </Typography>
           </Paper>
 
@@ -216,4 +238,4 @@ function Instalogin() {
   );
 }
 
-export default Instalogin;
+export default InstaLogin;
