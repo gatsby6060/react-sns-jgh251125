@@ -36,18 +36,27 @@ function Menu() {
           </ListItemIcon>
           <ListItemText primary="홈" />
         </ListItem>
+
+        {/* 5. 만들기 */}
+        <ListItem button component={Link} to="/instaregister">
+          <ListItemIcon>
+            <AddBoxOutlined />
+          </ListItemIcon>
+          <ListItemText primary="만들기" />
+        </ListItem>
+
         <ListItem button component={Link} to="/feed">
           <ListItemIcon>
             <Home />
           </ListItemIcon>
           <ListItemText primary="피드" />
         </ListItem>
-        <ListItem button component={Link} to="/register">
+        {/* <ListItem button component={Link} to="/register">
           <ListItemIcon>
             <Add />
           </ListItemIcon>
           <ListItemText primary="등록" />
-        </ListItem>
+        </ListItem> */}
         <ListItem button component={Link} to="/mypage">
           <ListItemIcon>
             <AccountCircle />
@@ -108,13 +117,7 @@ function Menu() {
           <ListItemText primary="알림" />
         </ListItem>
 
-        {/* 5. 만들기 */}
-        <ListItem button component={Link} to="/create">
-          <ListItemIcon>
-            <AddBoxOutlined />
-          </ListItemIcon>
-          <ListItemText primary="만들기" />
-        </ListItem>
+
 
         {/* 6. 프로필 */}
         {/* 기존 '마이페이지'가 있으나, 별도 항목으로 추가 */}

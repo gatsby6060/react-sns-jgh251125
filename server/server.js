@@ -1,10 +1,14 @@
+//server.js파일
+
 const express = require('express')
 const cors = require('cors')
 const path = require('path');
 const userRouter = require("./routes/user");
 const feedRouter = require("./routes/feed");
-const instaHomeRouter = require("./routes/Insta_home");
-const instaUserRouter = require("./routes/Insta_user");
+const instaHomeRouter = require("./routes/insta_home");
+const instaUserRouter = require("./routes/insta_user");
+const instaFeedRouter = require("./routes/insta_feed");
+const instaCommentRouter = require("./routes/insta_comment");
 
 const app = express()
 app.use(cors({
@@ -20,6 +24,8 @@ app.use("/user", userRouter);
 app.use("/feed", feedRouter);
 app.use("/Instahome", instaHomeRouter);
 app.use("/Instauser", instaUserRouter);
+app.use("/instafeed", instaFeedRouter);
+app.use("/instacomment", instaCommentRouter);
 
 
 

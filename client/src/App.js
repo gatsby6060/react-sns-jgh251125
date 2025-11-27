@@ -15,6 +15,7 @@ import InstaLogin from './components/InstaLogin';
 import InstaJoin from './components/InstaJoin';
 import InstaHome from './components/InstaHome';
 import InstaMenu from './components/InstaMenu'; // Menu로 변경
+import InstaRegister from './components/InstraRegister'; // Menu로 변경
 
 function App() {
   const location = useLocation();
@@ -37,6 +38,7 @@ function App() {
           <Route path="/instalogin" element={<InstaLogin />} />
           <Route path="/instajoin" element={<InstaJoin />} />
           <Route path="/instahome" element={<InstaHome />} />
+          <Route path="/instaregister" element={<InstaRegister />} />
         </Routes>
       </Box>
     </Box>

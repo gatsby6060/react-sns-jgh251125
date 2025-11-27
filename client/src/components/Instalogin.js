@@ -131,7 +131,7 @@ function InstaLogin() {
                     alert(data.msg);
                     if (data.result) {
                       localStorage.setItem("token", data.token);
-                      navigate("/instaMenu");
+                      navigate("/instaHome");
                     }
                   })
                   .catch(err => {
