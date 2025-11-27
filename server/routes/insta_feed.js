@@ -11,8 +11,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ... (이전 코드 유지: require, storage, upload 설정) ...
-
 router.post('/upload', upload.array('file'), async (req, res) => {
     let { feedId } = req.body;
     const files = req.files;
@@ -66,32 +64,19 @@ router.post('/upload', upload.array('file'), async (req, res) => {
 });
 
 
-router.get("/:userId", async (req, res) => { //피드목록볼떄
-    console.log("/feed/:userId 겟 라이우터 진입 /userId부분");
-    console.log(`${req.protocol}://${req.get("host")}`);
+router.get("/:userId", async (req, res) => {
     let { userId } = req.params;
 
     try {
-        // 1. 두개 쿼리 써서 리턴방식
-        // let [list] = await db.query("SELECT * FROM tbl_user WHERE userId = ?", {userId})
-        // let [cnt] = await db.query("SELECT count(*) FROM tbl_feed WHERE userId = ?", {userId})
-        // res.json({
-        //     user : list[0],
-        //     cnt: cnt[0],
-        // });
-
-        // 2. 조인쿼리 만들어서 하나로 리턴
         let sql = "select *  "
             + "from insta_tbl_feed F "
-            + "INNER JOIN insta_tbl_feed_img I ON F.ID = I.feedId "
-            + "WHERE F.USERID = ? ";
+            + "INNER JOIN insta_tbl_feed_img I ON F.FEED_ID = I.feedId "
+            + "WHERE F.USER_ID = ? ";
         let [list] = await db.query(sql, [userId]);
         res.json({
             list: list,
             result: "success"
         })
-
-
     } catch (error) {
         console.log("에러발생함 ", error);
     }
@@ -101,43 +86,44 @@ router.get("/:userId", async (req, res) => { //피드목록볼떄
 
 
 router.delete("/:feedid", authMiddleware, async (req, res) => {
-    console.log("/feed/:userId delete라우터 진입 /id부분");
     let { feedid } = req.params;
+    let userId = req.user.userId;
 
     try {
-        let sql = "DELETE FROM insta_tbl_feed "
-            + "WHERE id = ? ";
+        // 먼저 해당 피드가 현재 사용자의 것인지 확인
+        let checkSql = "SELECT USER_ID FROM insta_tbl_feed WHERE FEED_ID = ?";
+        let [checkResult] = await db.query(checkSql, [feedid]);
+        
+        if (checkResult.length === 0) {
+            return res.status(404).json({ result: "error", message: "피드를 찾을 수 없습니다." });
+        }
+        
+        if (checkResult[0].USER_ID !== userId) {
+            return res.status(403).json({ result: "error", message: "본인의 피드만 삭제할 수 있습니다." });
+        }
+        
+        let sql = "DELETE FROM insta_tbl_feed WHERE FEED_ID = ?";
         let [list] = await db.query(sql, [feedid]);
         res.json({
             list: list,
             result: "success"
         })
-
-
     } catch (error) {
         console.log("삭제중에 에러발생함 ", error);
+        res.status(500).json({ result: "error", message: "삭제 중 오류가 발생했습니다." });
     }
 })
 
-
-//REACT -> userId, content로 보내주고
-//서버에서 POST로 처리
-// router.post("/:userId", authMiddleware, async (req, res) => {
 router.post("/", async (req, res) => {
-    console.log("/feed/:userId POST라우터 진입");
-    // let { userId, content } = req.params;
     let { userId, content } = req.body;
     try {
-        let sql = "INSERT INTO insta_tbl_feed (USER_ID,TITLE,CONTENT,CREATED_AT) VALUES "
-            + "(? , ?, ?, NOW()) ";
-        let result = await db.query(sql, [userId, content, content]);
-        console.log(result);
+        let sql = "INSERT INTO insta_tbl_feed (USER_ID, CONTENT, CREATED_AT) VALUES "
+            + "(? , ?, NOW()) ";
+        let result = await db.query(sql, [userId, content]);
         res.json({
             result: result,
             msg: "success"
         })
-
-
     } catch (error) {
         console.log("데이터 삽입 중에 에러발생함 ", error);
     }

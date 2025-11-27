@@ -7,7 +7,7 @@ module.exports  = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
-        return res.status(401).json({ message: '인증 토큰 없음', isLogin: false });
+        return res.status(401).json({ result: "error", message: '인증 토큰 없음', isLogin: false });
     }
 
     try {
@@ -15,6 +15,7 @@ module.exports  = (req, res, next) => {
         req.user = decoded; // 이후 라우터에서 req.user로 사용자 정보 사용 가능
         next();
     } catch (err) {
-        return res.status(403).json({ message: '유효하지 않은 토큰', isLogin: false });
+        console.error("토큰 검증 에러:", err);
+        return res.status(403).json({ result: "error", message: '유효하지 않은 토큰', isLogin: false });
     }
 };

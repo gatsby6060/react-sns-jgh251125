@@ -120,8 +120,7 @@ function Menu() {
 
 
         {/* 6. 프로필 */}
-        {/* 기존 '마이페이지'가 있으나, 별도 항목으로 추가 */}
-        <ListItem button component={Link} to="/profile">
+        <ListItem button component={Link} to="/instaprofile">
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>

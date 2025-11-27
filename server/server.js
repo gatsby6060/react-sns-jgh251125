@@ -22,8 +22,8 @@ app.use("/uploads", express.static(path.join(__dirname,"uploads")) );
 //라우터 영역
 app.use("/user", userRouter);
 app.use("/feed", feedRouter);
-app.use("/Instahome", instaHomeRouter);
-app.use("/Instauser", instaUserRouter);
+app.use("/instahome", instaHomeRouter);
+app.use("/instauser", instaUserRouter);
 app.use("/instafeed", instaFeedRouter);
 app.use("/instacomment", instaCommentRouter);
 

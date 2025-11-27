@@ -14,8 +14,10 @@ import Mui from './components/Mui';
 import InstaLogin from './components/InstaLogin';
 import InstaJoin from './components/InstaJoin';
 import InstaHome from './components/InstaHome';
-import InstaMenu from './components/InstaMenu'; // Menu로 변경
-import InstaRegister from './components/InstraRegister'; // Menu로 변경
+import InstaMenu from './components/InstaMenu';
+import InstaRegister from './components/InstraRegister';
+import InstaProfile from './components/InstaProfile';
+import InstaExplore from './components/InstaExplore'; 
 
 function App() {
   const location = useLocation();
@@ -39,6 +41,8 @@ function App() {
           <Route path="/instajoin" element={<InstaJoin />} />
           <Route path="/instahome" element={<InstaHome />} />
           <Route path="/instaregister" element={<InstaRegister />} />
+          <Route path="/instaprofile" element={<InstaProfile />} />
+          <Route path="/explore" element={<InstaExplore />} />
         </Routes>
       </Box>
     </Box>

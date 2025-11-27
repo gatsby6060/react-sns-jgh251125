@@ -75,18 +75,15 @@ router.get("/", async (req, res) => {
 
         let [list] = await db.query(sql);
 
-        // ⭐⭐⭐ 핵심 수정: 미디어 타입 추가 ⭐⭐⭐
         const feedsWithMediaType = list.map(feed => {
-            // ImgPath가 null인 경우나, 경로가 있지만 mediaType이 없는 경우를 처리
             const mediaType = getMediaType(feed.ImgPath);
             return {
-                ...feed, // 기존 필드 유지 (imgNo, ImgPath, F.* 등)
-                mediaType: mediaType // 새로 추가된 필드
+                ...feed,
+                mediaType: mediaType
             };
         });
-        // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
 
-        res.json({ list: feedsWithMediaType, result: "success" }); // 수정된 리스트 반환
+        res.json({ list: feedsWithMediaType, result: "success" });
     } catch (error) {
         console.log("전체 피드 조회 중 에러발생함 ", error);
         res.status(500).json({ error: "Failed to fetch feeds" });
@@ -94,36 +91,40 @@ router.get("/", async (req, res) => {
 });
 
 
-router.get("/:userId", async (req, res) => { //피드목록볼떄
-
-    console.log(`${req.protocol}://${req.get("host")}`);
+router.get("/:userId", async (req, res) => {
     let { userId } = req.params;
 
     try {
-        // 1. 두개 쿼리 써서 리턴방식
-        // let [list] = await db.query("SELECT * FROM tbl_user WHERE userId = ?", {userId})
-        // let [cnt] = await db.query("SELECT count(*) FROM tbl_feed WHERE userId = ?", {userId})
-        // res.json({
-        //     user : list[0],
-        //     cnt: cnt[0],
-        // });
-
-        // 2. 조인쿼리 만들어서 하나로 리턴
-        let sql = "select *  "
-            + "from insta_tbl_feed F "
-            + "INNER JOIN insta_tbl_feed_img I ON F.FEED_ID = I.feedId "
-            + "WHERE F.USER_ID = ? ";
-        let completedSql = sql.replace("?", `"${userId}"`);
-        console.log("완성된 SQL: ", completedSql);
+        let sql = `
+            SELECT I.imgNo, I.ImgPath, I.imgName, F.* 
+            FROM insta_tbl_feed F
+            LEFT JOIN insta_tbl_feed_img I 
+            ON F.FEED_ID = I.feedId
+            AND I.imgNo = (
+                SELECT MIN(imgNo)
+                FROM insta_tbl_feed_img
+                WHERE feedId = F.FEED_ID
+            )
+            WHERE F.USER_ID = ?
+            ORDER BY F.CREATED_AT DESC
+        `;
         let [list] = await db.query(sql, [userId]);
+        
+        const feedsWithMediaType = list.map(feed => {
+            const mediaType = getMediaType(feed.ImgPath);
+            return {
+                ...feed,
+                mediaType: mediaType
+            };
+        });
+        
         res.json({
-            list: list,
+            list: feedsWithMediaType,
             result: "success"
         })
-
-
     } catch (error) {
         console.log("에러발생함 ", error);
+        res.status(500).json({ result: "error", message: "피드 조회 중 오류가 발생했습니다." });
     }
 })
 
@@ -131,76 +132,73 @@ router.get("/:userId", async (req, res) => { //피드목록볼떄
 
 
 router.delete("/:feedid", authMiddleware, async (req, res) => {
-    console.log("/feed/:userId delete라우터 진입 /id부분");
     let { feedid } = req.params;
+    let userId = req.user.userId;
 
     try {
-        let sql = "DELETE FROM tbl_feed "
-            + "WHERE id = ? ";
+        // 먼저 해당 피드가 현재 사용자의 것인지 확인
+        let checkSql = "SELECT USER_ID FROM insta_tbl_feed WHERE FEED_ID = ?";
+        let [checkResult] = await db.query(checkSql, [feedid]);
+        
+        if (checkResult.length === 0) {
+            return res.status(404).json({ result: "error", message: "피드를 찾을 수 없습니다." });
+        }
+        
+        if (checkResult[0].USER_ID !== userId) {
+            return res.status(403).json({ result: "error", message: "본인의 피드만 삭제할 수 있습니다." });
+        }
+        
+        let sql = "DELETE FROM insta_tbl_feed WHERE FEED_ID = ?";
         let [list] = await db.query(sql, [feedid]);
         res.json({
             list: list,
             result: "success"
         })
-
-
     } catch (error) {
         console.log("삭제중에 에러발생함 ", error);
+        res.status(500).json({ result: "error", message: "삭제 중 오류가 발생했습니다." });
     }
 })
 
-
-//REACT -> userId, content로 보내주고
-//서버에서 POST로 처리
-// router.post("/:userId", authMiddleware, async (req, res) => {
 router.post("/", async (req, res) => {
-    // console.log("/instahome/:userId POST라우터 진입");
-    // let { userId, content } = req.params;
     let { userId, content } = req.body;
     try {
-        let sql = "INSERT INTO tbl_feed  VALUES "
-            + "(NULL , ?, ?, NOW()) ";
+        let sql = "INSERT INTO insta_tbl_feed (USER_ID, CONTENT, CREATED_AT) VALUES "
+            + "(? , ?, NOW()) ";
         let result = await db.query(sql, [userId, content]);
-        console.log(result);
         res.json({
             result: result,
             msg: "success"
         })
-
-
     } catch (error) {
         console.log("데이터 삽입 중에 에러발생함 ", error);
     }
 })
 
-// GET /instahome/:feedId/images  피드내용 상세시 사진 더 가져오려는 의도
 router.get("/:feedId/images", async (req, res) => {
-const feedId = req.params.feedId;
-try {
-const sql = `
-SELECT imgNo, ImgPath, imgName 
-FROM insta_tbl_feed_img 
-WHERE feedId = ? 
-
-AND imgNo != ( 
-SELECT MIN(imgNo) 
-FROM insta_tbl_feed_img 
-WHERE feedId = ? 
-)
-ORDER BY imgNo ASC; 
-`;
-// feedId를 두 번 전달합니다.
-const [rows] = await db.query(sql, [feedId, feedId]); 
-// ⭐ 수정 3: 미디어 타입 추가
-const imagesWithMediaType = rows.map(item => ({
-...item,
-mediaType: getMediaType(item.ImgPath) }));
-
-res.json({ images: imagesWithMediaType, result: "success" });
-} catch (error) {
- console.error("Error fetching images for feed:", error);
- res.status(500).json({ result: "error", message: "Failed to fetch images" });
-}
+    const feedId = req.params.feedId;
+    try {
+        const sql = `
+            SELECT imgNo, ImgPath, imgName 
+            FROM insta_tbl_feed_img 
+            WHERE feedId = ? 
+            AND imgNo != ( 
+                SELECT MIN(imgNo) 
+                FROM insta_tbl_feed_img 
+                WHERE feedId = ? 
+            )
+            ORDER BY imgNo ASC
+        `;
+        const [rows] = await db.query(sql, [feedId, feedId]); 
+        const imagesWithMediaType = rows.map(item => ({
+            ...item,
+            mediaType: getMediaType(item.ImgPath)
+        }));
+        res.json({ images: imagesWithMediaType, result: "success" });
+    } catch (error) {
+        console.error("Error fetching images for feed:", error);
+        res.status(500).json({ result: "error", message: "Failed to fetch images" });
+    }
 });
 
 module.exports = router;

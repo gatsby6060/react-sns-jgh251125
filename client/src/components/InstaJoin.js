@@ -1,5 +1,5 @@
 // Join.js
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Box,
   TextField,
@@ -13,17 +13,107 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function InstaJoin() {
   let navigate = useNavigate();
-  let emailorphoneRef = useRef();
-  let pwdRef = useRef();
-  let fullNameRef = useRef();
-  let userNameRef = useRef();
+  
+  // 실시간 검증을 위한 state
+  const [userName, setUserName] = useState('');
+  const [emailorphone, setEmailorphone] = useState('');
+  const [pwd, setPwd] = useState('');
+  const [fullName, setFullName] = useState('');
+  
+  // 에러 메시지 state
+  const [userNameError, setUserNameError] = useState('');
+  const [emailorphoneError, setEmailorphoneError] = useState('');
+  const [pwdError, setPwdError] = useState('');
+  const [fullNameError, setFullNameError] = useState('');
+  
+  // 중복 체크 중인지 표시
+  const [checkingUserName, setCheckingUserName] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  // 사용자 이름 중복 체크
+  function checkUserName(value) {
+    if (!value || value.trim() === '') {
+      setUserNameError('');
+      return;
+    }
+    
+    setCheckingUserName(true);
+    fetch("http://localhost:3010/instauser/check/username/" + value)
+      .then(res => res.json())
+      .then(data => {
+        if (data.isDuplicate) {
+          setUserNameError('이미 사용 중인 사용자 이름입니다.');
+        } else {
+          setUserNameError('');
+        }
+        setCheckingUserName(false);
+      })
+      .catch(err => {
+        console.error('중복 체크 중 에러:', err);
+        setCheckingUserName(false);
+      });
+  }
+
+  // 이메일/휴대폰 중복 체크
+  function checkEmailorphone(value) {
+    if (!value || value.trim() === '') {
+      setEmailorphoneError('');
+      return;
+    }
+    
+    setCheckingEmail(true);
+    fetch("http://localhost:3010/instauser/check/email/" + value)
+      .then(res => res.json())
+      .then(data => {
+        if (data.isDuplicate) {
+          setEmailorphoneError('이미 사용 중인 이메일 또는 휴대폰 번호입니다.');
+        } else {
+          setEmailorphoneError('');
+        }
+        setCheckingEmail(false);
+      })
+      .catch(err => {
+        console.error('중복 체크 중 에러:', err);
+        setCheckingEmail(false);
+      });
+  }
+
+  // 비밀번호 정규식 검증
+  function validatePassword(value) {
+    if (!value) {
+      setPwdError('');
+      return;
+    }
+    
+    // 비밀번호 정규식: 최소 8자, 영문, 숫자, 특수문자 포함
+    let passwordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/;
+    
+    if (value.length < 8) {
+      setPwdError('비밀번호는 최소 8자 이상이어야 합니다.');
+    } else if (!passwordRegex.test(value)) {
+      setPwdError('비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.');
+    } else {
+      setPwdError('');
+    }
+  }
 
   function fnJoin() {
+    // 최종 검증
+    if (userNameError || emailorphoneError || pwdError || fullNameError) {
+      alert('입력 정보를 확인해주세요.');
+      return;
+    }
+    
+    if (!userName || !emailorphone || !pwd || !fullName) {
+      alert('모든 항목을 입력해주세요.');
+      return;
+    }
+
     let param = {
-      userId: userNameRef.current.value,
-      pwd: pwdRef.current.value,
-      userName: fullNameRef.current.value,
-      emailorphone: emailorphoneRef.current.value
+      userId: userName,
+      pwd: pwd,
+      userName: fullName,
+      emailorphone: emailorphone
     };
 
     fetch("http://localhost:3010/instauser/join", {
@@ -123,40 +213,68 @@ function InstaJoin() {
 
             {/* 입력 필드들 */}
             <TextField
-              inputRef={emailorphoneRef}
               label="휴대폰 번호 또는 이메일 주소"
               variant="outlined"
               margin="dense"
               fullWidth
               size="small"
+              value={emailorphone}
+              onChange={(e) => {
+                setEmailorphone(e.target.value);
+                checkEmailorphone(e.target.value);
+              }}
+              error={!!emailorphoneError}
+              helperText={emailorphoneError || (checkingEmail ? '확인 중...' : '')}
               sx={{ mb: 1 }}
             />
             <TextField
-              inputRef={fullNameRef}
               label="성명"
               variant="outlined"
               margin="dense"
               fullWidth
               size="small"
+              value={fullName}
+              onChange={(e) => {
+                setFullName(e.target.value);
+                if (!e.target.value || e.target.value.trim() === '') {
+                  setFullNameError('성명을 입력해주세요.');
+                } else {
+                  setFullNameError('');
+                }
+              }}
+              error={!!fullNameError}
+              helperText={fullNameError}
               sx={{ mb: 1 }}
             />
             <TextField
-              inputRef={userNameRef}
               label="사용자 이름"
               variant="outlined"
               margin="dense"
               fullWidth
               size="small"
+              value={userName}
+              onChange={(e) => {
+                setUserName(e.target.value);
+                checkUserName(e.target.value);
+              }}
+              error={!!userNameError}
+              helperText={userNameError || (checkingUserName ? '확인 중...' : '')}
               sx={{ mb: 1 }}
             />
             <TextField
-              inputRef={pwdRef}
               label="비밀번호"
               variant="outlined"
               margin="dense"
               fullWidth
               size="small"
               type="password"
+              value={pwd}
+              onChange={(e) => {
+                setPwd(e.target.value);
+                validatePassword(e.target.value);
+              }}
+              error={!!pwdError}
+              helperText={pwdError || '영문, 숫자, 특수문자를 포함하여 최소 8자 이상'}
               sx={{ mb: 2 }}
             />
 
