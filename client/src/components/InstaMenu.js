@@ -45,45 +45,45 @@ function Menu() {
           <ListItemText primary="만들기" />
         </ListItem>
 
-        <ListItem button component={Link} to="/feed">
+        {/* <ListItem button component={Link} to="/feed">
           <ListItemIcon>
             <Home />
           </ListItemIcon>
           <ListItemText primary="피드" />
-        </ListItem>
+        </ListItem> */}
         {/* <ListItem button component={Link} to="/register">
           <ListItemIcon>
             <Add />
           </ListItemIcon>
           <ListItemText primary="등록" />
         </ListItem> */}
-        <ListItem button component={Link} to="/mypage">
+        {/* <ListItem button component={Link} to="/mypage">
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>
           <ListItemText primary="마이페이지" />
-        </ListItem>
-        <ListItem button component={Link} to="/login2">
+        </ListItem> */}
+        {/* <ListItem button component={Link} to="/login2">
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>
           <ListItemText primary="신형로그인페이지(test중)" />
-        </ListItem>
-        <ListItem button component={Link} to="/mui">
+        </ListItem> */}
+        {/* <ListItem button component={Link} to="/mui">
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>
           <ListItemText primary="MUI" />
-        </ListItem>
+        </ListItem> */}
         {/* --- 기존 메뉴 항목 끝 --- */}
 
-        <Divider sx={{ my: 1 }} /> {/* 구분선 추가 */}
+        {/* <Divider sx={{ my: 1 }} /> 구분선 추가 */}
         
         {/* --- 새로 추가된 인스타그램 스타일 메뉴 시작 --- */}
-        <Typography variant="subtitle2" component="div" sx={{ p: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+        {/* <Typography variant="subtitle2" component="div" sx={{ p: 2, fontWeight: 'bold', color: 'text.secondary' }}>
             {/* 임시 구분자 */}
-            Insta Navigation
-        </Typography>
+            {/* Insta Navigation */}
+        {/* </Typography>  */}
 
         {/* 1. 검색 */}
         <ListItem button component={Link} to="/search">
@@ -130,12 +130,12 @@ function Menu() {
         <Divider sx={{ my: 1 }} />
 
         {/* 7. 더 보기 (하단) */}
-        <ListItem button component={Link} to="/more">
+        {/* <ListItem button component={Link} to="/more">
           <ListItemIcon>
             <MoreHoriz />
           </ListItemIcon>
           <ListItemText primary="더 보기" />
-        </ListItem>
+        </ListItem> */}
         {/* --- 새로 추가된 인스타그램 스타일 메뉴 끝 --- */}
         
       </List>

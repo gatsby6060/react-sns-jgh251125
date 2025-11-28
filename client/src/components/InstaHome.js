@@ -32,6 +32,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 function InstaHome() {
   //상세이미지에서 여러 사진을 더 보여주려고 추가
@@ -48,18 +49,24 @@ function InstaHome() {
   let [currentUserId, setCurrentUserId] = useState('');
   let navigate = useNavigate();
 
-  function fnGetFeed() {
+function fnGetFeed() {
     const token = localStorage.getItem("token");
     if (token) {
-      const decoded = jwtDecode(token);
-      console.log("decode==> ", decoded);
-      setCurrentUserId(decoded.userId);
-      fetch("http://localhost:3010/instahome")
-        .then(res => res.json())
-        .then(data => {
-          console.log("인스타피드, 돌아온데이터 " + JSON.stringify(data));
-          setFeeds(data.list);
+        const decoded = jwtDecode(token);
+        console.log("decode==> ", decoded);
+        setCurrentUserId(decoded.userId);
+        
+        // 💡 수정된 부분: fetch 요청 시 Authorization 헤더에 토큰 추가
+        fetch("http://localhost:3010/instahome", { 
+            headers: {
+                "Authorization": "Bearer " + token, // 백엔드의 authMiddleware가 이 토큰을 읽게 됩니다.
+            }
         })
+          .then(res => res.json())
+          .then(data => {
+            console.log("인스타피드, 돌아온데이터 " + JSON.stringify(data));
+            setFeeds(data.list);
+          })
     } else {
       alert("로그인 해주세요");
       navigate("/instalogin");
@@ -71,6 +78,67 @@ function InstaHome() {
   }, []);
 
   const handleClickOpen = (feed) => {
+    // alert("handleClickOpen 버튼 눌림"); 
+    // setSelectedFeed(feed);
+    // setOpen(true);
+    // setNewComment('');
+
+    // 이미지 로드
+    // setImgLoading(true);
+    // setImages([]);
+    // setCurrentImgIdx(0);
+
+    // 추가 이미지 가져오기
+    // fetch(`http://localhost:3010/instahome/${feed.FEED_ID}/images`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     let fetchedImages = Array.isArray(data.images) ? data.images : [];
+    //     const primaryMedia = {
+    //       imgNo: -1,
+    //       ImgPath: feed.ImgPath,
+    //       mediaType: feed.mediaType,
+    //       imgName: feed.imgName || 'primary-media',
+    //     };
+    //     const combinedImages = [primaryMedia, ...fetchedImages];
+    //     setImages(combinedImages);
+    //     setImgLoading(false);
+    //   })
+    //   .catch(err => {
+    //     console.error(err);
+    //     if (feed.ImgPath) {
+    //       setImages([{
+    //         imgNo: -1,
+    //         ImgPath: feed.ImgPath,
+    //         mediaType: feed.mediaType,
+    //         imgName: feed.imgName || 'primary-media'
+    //       }]);
+    //     }
+    //     setImgLoading(false);
+    //   });
+
+    // 댓글 목록 가져오기
+    // fetch(`http://localhost:3010/instacomment/${feed.FEED_ID}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     if (data.result === 'success' && Array.isArray(data.comments)) {
+    //       let formattedComments = data.comments.map(comment => ({
+    //         id: comment.USER_ID,
+    //         text: comment.CONTENT,
+    //         avatarUrl: ''
+    //       }));
+    //       setComments(formattedComments);
+    //     } else {
+    //       setComments([]);
+    //     }
+    //   })
+    //   .catch(err => {
+    //     console.error('댓글 조회 중 에러:', err);
+    //     setComments([]);
+    //   });
+  };
+
+  const commentIconClick = (feed) => {
+    // alert("commentIconClick 버튼 눌림"); 
     setSelectedFeed(feed);
     setOpen(true);
     setNewComment('');
@@ -79,7 +147,7 @@ function InstaHome() {
     setImgLoading(true);
     setImages([]);
     setCurrentImgIdx(0);
-    
+
     // 추가 이미지 가져오기
     fetch(`http://localhost:3010/instahome/${feed.FEED_ID}/images`)
       .then(res => res.json())
@@ -98,11 +166,11 @@ function InstaHome() {
       .catch(err => {
         console.error(err);
         if (feed.ImgPath) {
-          setImages([{ 
-            imgNo: -1, 
-            ImgPath: feed.ImgPath, 
+          setImages([{
+            imgNo: -1,
+            ImgPath: feed.ImgPath,
             mediaType: feed.mediaType,
-            imgName: feed.imgName || 'primary-media' 
+            imgName: feed.imgName || 'primary-media'
           }]);
         }
         setImgLoading(false);
@@ -128,6 +196,55 @@ function InstaHome() {
         setComments([]);
       });
   };
+
+
+  const heartIconClick = (feed) => {
+    alert("heartIconClick 버튼 눌림");
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("로그인 해주세요");
+      navigate("/instalogin");
+      return;
+    }
+
+    // 현재 사용자 ID는 이미 currentUserId 상태에 저장되어 있으므로 그걸 사용합니다.
+    // const decoded = jwtDecode(token);
+    // const userId = decoded.userId;
+
+    // 좋아요 업데이트 요청 (좋아요/좋아요 취소 토글 로직은 백엔드에서 처리한다고 가정)
+    // 좋아요 엔드포인트는 /instaheart와 같이 POST/PUT 요청으로 만들 수 있습니다.
+    fetch('http://localhost:3010/instafeed/instaheart', { // 💡 백엔드 엔드포인트는 /instaheart로 가정합니다.
+      method: 'POST', // 좋아요 업데이트는 PUT 사용합니다.(POST로 보내기도함 서버 정하기 마음)
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Authorization': `Bearer ${token}` // 토큰을 헤더에 포함
+        "Authorization": "Bearer " + localStorage.getItem("token"), // 토큰을 헤더에 포함
+      },
+      body: JSON.stringify({
+        feedId: feed.FEED_ID, // 현재 피드의 ID
+        userId: currentUserId, // 현재 로그인한 사용자 ID
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result === 'success') {
+          // 성공적으로 업데이트되면 피드 목록을 새로고침하여 '좋아요 수'를 업데이트합니다.
+          // data.message는 "좋아요가 추가되었습니다" 또는 "좋아요가 취소되었습니다"일 수 있습니다.
+          alert(data.message || "좋아요 상태가 변경되었습니다.");
+          fnGetFeed(); // 피드 목록 새로고침
+        } else {
+          alert(data.message || '좋아요 업데이트에 실패했습니다.');
+        }
+      })
+      .catch(error => {
+        console.error('좋아요 업데이트 중 에러:', error);
+        alert('좋아요 업데이트 중 오류가 발생했습니다.');
+      });
+
+
+  };
+
 
   const handleClose = () => {
     setOpen(false);
@@ -254,7 +371,7 @@ function InstaHome() {
                   {/* 피드 미디어 영역 */}
                   <Box
                     onClick={() => handleClickOpen(feed)}
-                    sx={{ cursor: 'pointer', maxHeight: '600px', objectFit: 'cover' }}
+                    sx={{ cursor: 'pointer', maxHeight: '1000px', objectFit: 'cover', maxWidth: '600px' }}
                   >
                     {feed.mediaType === 'video' ? (
                       <video
@@ -278,20 +395,36 @@ function InstaHome() {
                   </Box>
 
                   {/* 액션 버튼 */}
+                  {/* <Box sx={{ p: 1 }}>
+                    <IconButton onClick={() => heartIconClick(feed)}><FavoriteBorderIcon /></IconButton>
+                    <IconButton onClick={() => commentIconClick(feed)}><ModeCommentOutlinedIcon /></IconButton>
+                    <IconButton onClick={() => commentIconClick(feed)}><SendIcon /></IconButton>
+                  </Box> */}
+                  {/* 액션 버튼 */}
                   <Box sx={{ p: 1 }}>
-                    <IconButton><FavoriteBorderIcon /></IconButton>
-                    <IconButton><ModeCommentOutlinedIcon /></IconButton>
-                    <IconButton><SendIcon /></IconButton>
+                    {/* 좋아요 상태(feed.isLiked)에 따라 아이콘과 색상 변경 */}
+                    <IconButton onClick={() => heartIconClick(feed)}>
+                      {feed.isLiked ? (
+                        // 좋아요를 눌렀을 때: 채워진 빨간 하트
+                        <FavoriteIcon sx={{ color: 'red' }} />
+                      ) : (
+                        // 좋아요를 누르지 않았을 때: 빈 하트
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+                    <IconButton onClick={() => commentIconClick(feed)}><ModeCommentOutlinedIcon /></IconButton>
+                    <IconButton onClick={() => commentIconClick(feed)}><SendIcon /></IconButton>
                   </Box>
 
                   {/* 좋아요 수 및 내용 */}
                   <CardContent sx={{ pt: 0 }}>
-                    <Typography variant="subtitle2" fontWeight="bold">좋아요 1,234개</Typography>
-                    <Typography variant="body2" sx={{ my: 0.5 }}>
+                    {/* <Typography variant="subtitle2" fontWeight="bold">좋아요 1,234개</Typography> */}
+                    <Typography variant="subtitle2" fontWeight="bold">좋아요 {feed.LIKE_COUNT || '0'}개</Typography>
+                    <Typography variant="body2" sx={{ my: 0.5, width: '550px' }}>
                       <Typography component="span" fontWeight="bold" sx={{ mr: 1 }}>{feed.USER_ID || feed.userId}</Typography>
                       {feed.CONTENT || feed.content}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" onClick={() => handleClickOpen(feed)} sx={{ cursor: 'pointer' }}>
+                    <Typography variant="body2" color="textSecondary" onClick={() => commentIconClick(feed)} sx={{ cursor: 'pointer' }}>
                       댓글 보기...
                     </Typography>
                   </CardContent>
@@ -393,24 +526,24 @@ function InstaHome() {
 
                   {images.length > 0 ? (
                     images[currentImgIdx].mediaType === 'video' ? (
-                      <video
-                        src={images[currentImgIdx].ImgPath}
-                        controls
-                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto'}}
-                      >
-                        지원하지 않는 동영상 형식입니다.
-                      </video>
-                    ) : (
-                      <img
-                        src={images[currentImgIdx].ImgPath}
-                        alt={images[currentImgIdx].imgName || selectedFeed?.imgName}
-                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto' }}
-                        onError={(e) => { e.currentTarget.style.opacity = 0.6; }}
-                      />
-                    )
-                  ) : (
-                    <Box sx={{ color: '#fff' }}>이미지가 없습니다</Box>
-                  )}
+                      <video
+                        src={images[currentImgIdx].ImgPath}
+                        controls
+                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto' }}
+                      >
+                        지원하지 않는 동영상 형식입니다.
+                      </video>
+                    ) : (
+                      <img
+                        src={images[currentImgIdx].ImgPath}
+                        alt={images[currentImgIdx].imgName || selectedFeed?.imgName}
+                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto' }}
+                        onError={(e) => { e.currentTarget.style.opacity = 0.6; }}
+                      />
+                    )
+                  ) : (
+                    <Box sx={{ color: '#fff' }}>이미지가 없습니다</Box>
+                  )}
 
                   {/* next */}
                   {images.length > 1 && (

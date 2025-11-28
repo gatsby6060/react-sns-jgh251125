@@ -14,10 +14,14 @@ import {
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from 'react-router-dom';
+
+
 
 function Register() {
   const [files, setFile] = React.useState([]);
   let contentRef = useRef();
+  let navigate = useNavigate();
 
   // const handleFileChange = (event) => {
   //   setFile(event.target.files);
@@ -54,6 +58,7 @@ function Register() {
         fnUploadFile(data.result[0].insertId);
         // setOpen(false);
         // fnGetFeed();
+        // navigate("/instahome");
       })
 
   }
@@ -71,7 +76,7 @@ function Register() {
       .then(res => res.json())
       .then(data => {
         console.log("피드 업로드 후 돌아온 data " + data);
-        // navigate("/instahome"); // 원하는 경로
+        navigate("/instahome"); // 원하는 경로
       })
       .catch(err => {
         console.error(err);

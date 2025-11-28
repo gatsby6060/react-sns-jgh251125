@@ -58,6 +58,66 @@ const getMediaType = (path) => {
 
     return 'unknown';
 };
+
+// router.get("/", authMiddleware, async (req, res) => {
+//     console.log("insta_home.js 파일진입 get / 진입");
+    
+//     // 💡 authMiddleware를 통해 현재 로그인한 사용자 ID를 추출
+//     const currentUserId = req.user.userId;
+
+//     try {
+//         let sql = `
+//             SELECT 
+//                 F.*, 
+//                 I.imgNo, 
+//                 I.ImgPath, 
+//                 -- 💡 1. 현재 사용자의 좋아요 여부를 확인
+//                 CASE WHEN L.FEED_ID IS NOT NULL THEN TRUE ELSE FALSE END AS isLiked
+//             FROM 
+//                 insta_tbl_feed F
+            
+//             -- 💡 2. 피드의 첫 번째 이미지(대표 이미지)를 가져오기 위한 LEFT JOIN
+//             LEFT JOIN 
+//                 insta_tbl_feed_img I
+//             ON 
+//                 F.FEED_ID = I.feedId
+//             AND 
+//                 I.imgNo = (
+//                     SELECT MIN(imgNo)
+//                     FROM insta_tbl_feed_img
+//                     WHERE feedId = F.FEED_ID
+//                 )
+            
+//             -- 💡 3. 현재 사용자가 해당 피드에 좋아요를 눌렀는지 확인하기 위한 LEFT JOIN
+//             LEFT JOIN 
+//                 insta_tbl_like L
+//             ON 
+//                 F.FEED_ID = L.FEED_ID AND L.USER_ID = ?  -- 현재 사용자 ID와 일치하는 좋아요 기록만 JOIN
+            
+//             ORDER BY 
+//                 F.CREATED_AT DESC;
+//         `;
+
+//         // 💡 쿼리 파라미터로 현재 사용자 ID를 전달
+//         let [list] = await db.query(sql, [currentUserId]); 
+
+//         // 기존 스타일 유지: ImagePath를 기반으로 mediaType을 계산
+//         const feedsWithMediaType = list.map(feed => {
+//             // ImgPath가 NULL인 경우를 대비하여 체크
+//             const mediaType = feed.ImgPath ? getMediaType(feed.ImgPath) : null;
+//             return {
+//                 ...feed,
+//                 mediaType: mediaType
+//             };
+//         });
+
+//         res.json({ list: feedsWithMediaType, result: "success" });
+//     } catch (error) {
+//         console.log("전체 피드 조회 중 에러발생함 ", error);
+//         res.status(500).json({ error: "Failed to fetch feeds" });
+//     }
+// });
+
 router.get("/", async (req, res) => {
     console.log("insta_home.js파일진입  get / 진입");
     try {
