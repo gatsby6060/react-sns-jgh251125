@@ -1,5 +1,5 @@
 // Login.js
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -19,6 +19,31 @@ function InstaLogin() {
   let userId = useRef();
   let pwd = useRef();
   let navigate = useNavigate();
+
+  // //251130카카오로그인 관련2: 카카오 SDK 초기화 (컴포넌트 마운트 시 실행)
+  useEffect(() => {
+    // 카카오 SDK가 로드될 때까지 대기
+    const initKakao = () => {
+      if (window.Kakao) {
+        // 카카오 SDK가 이미 초기화되어 있지 않다면 초기화
+        if (!window.Kakao.isInitialized()) {
+          // 여기에 카카오 JavaScript 키를 입력하세요
+          // 예: window.Kakao.init('your_kakao_javascript_key_here');
+          // 임시로 테스트용 키를 사용하거나, 환경변수로 관리하세요
+          try {
+            window.Kakao.init('45bdf1dec9fbb56badb6c97f1aa503e8');
+          } catch (e) {
+            console.log('카카오 SDK 초기화 실패:', e);
+          }
+        }
+      } else {
+        // SDK가 아직 로드되지 않았다면 잠시 후 다시 시도
+        setTimeout(initKakao, 100);
+      }
+    };
+    
+    initKakao();
+  }, []);
 
   return (
     <Box
@@ -185,9 +210,85 @@ function InstaLogin() {
                   marginRight: 1,
                 },
               }}
-              fullWidth // 버튼이 가로 전체를 차지하게 함 (여기까지 버튼 시작부분)
+              fullWidth
             >
               Facebook으로 로그인
+            </Button>
+
+            {/* //251130카카오로그인 관련3: 카카오 로그인 버튼 - Facebook 버튼 바로 아래에 표시 */}
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (!window.Kakao || !window.Kakao.isInitialized()) {
+                  alert('카카오 SDK가 초기화되지 않았습니다. 카카오 JavaScript 키를 확인해주세요.');
+                  return;
+                }
+
+                // 카카오 로그인
+                window.Kakao.Auth.login({
+                  success: function (authObj) {
+                    // 로그인 성공 시 액세스 토큰을 서버로 전송
+                    fetch("http://localhost:3010/instauser/kakao/login", {
+                      method: "POST",
+                      headers: { "Content-type": "application/json" },
+                      body: JSON.stringify({ accessToken: authObj.access_token }),
+                    })
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.result) {
+                          localStorage.setItem("token", data.token);
+                          alert(data.msg);
+                          navigate("/instaHome");
+                        } else {
+                          alert(data.msg || "카카오 로그인에 실패했습니다.");
+                        }
+                      })
+                      .catch(err => {
+                        console.error(err);
+                        alert("서버 통신 중 오류가 발생했습니다.");
+                      });
+                  },
+                  fail: function (err) {
+                    console.error("카카오 로그인 실패:", err);
+                    alert("카카오 로그인에 실패했습니다.");
+                  },
+                });
+              }}
+              startIcon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ display: 'block', flexShrink: 0 }}
+                >
+                  <path
+                    d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z"
+                    fill="#FEE500"
+                  />
+                  <path
+                    d="M6.91 10.854c-.16 0-.324.008-.49.025l-.021-.004-.029.003c-1.189.12-2.218.68-2.9 1.537a.389.389 0 0 0-.12.258c-.018.15.09.285.239.315 1.826.457 3.375 1.313 4.52 2.457a.357.357 0 0 0 .472.05c1.04-.695 1.811-1.63 2.225-2.728.392-1.032.34-2.165-.15-3.197a.35.35 0 0 0-.26-.2c-.9-.18-1.9-.278-2.916-.278v.001zm10.18 0c-.16 0-.324.008-.49.025l-.021-.004-.028.003c-1.19.12-2.22.68-2.9 1.537a.388.388 0 0 0-.12.258c-.018.15.09.285.24.315 1.825.457 3.374 1.313 4.52 2.457a.357.357 0 0 0 .472.05c1.04-.695 1.81-1.63 2.225-2.728.392-1.032.34-2.165-.15-3.197a.35.35 0 0 0-.26-.2c-.9-.18-1.9-.278-2.916-.278v.001z"
+                    fill="#000000"
+                  />
+                </svg>
+              }
+              sx={{
+                mt: 1,
+                mb: 1,
+                backgroundColor: '#FEE500',
+                color: '#000000',
+                textTransform: 'none',
+                fontWeight: 600,
+                '&:hover': { 
+                  backgroundColor: '#FDD835',
+                },
+                '& .MuiButton-startIcon': {
+                  marginRight: 1,
+                },
+              }}
+              fullWidth
+            >
+              카카오톡으로 로그인
             </Button>
 
             <Typography variant="body2" sx={{ mt: 2 }}>

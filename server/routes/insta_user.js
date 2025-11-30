@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const authMiddleware = require("../auth");
+// //251130카카오로그인 관련4: Node.js 내장 fetch 사용 (axios 불필요)
 const JWT_KEY = "server_secret_key";
 
 const storage = multer.diskStorage({
@@ -218,6 +219,97 @@ router.delete("/profile/image", authMiddleware, async (req, res) => {
     } catch (error) {
         console.error("프로필 사진 삭제 중 에러:", error);
         res.status(500).json({ result: "error", message: "프로필 사진 삭제에 실패했습니다." });
+    }
+});
+
+// //251130카카오로그인 관련5: 카카오 로그인 엔드포인트 - 클라이언트에서 받은 액세스 토큰으로 카카오 사용자 정보 조회 후 로그인/회원가입 처리
+router.post("/kakao/login", async (req, res) => {
+    let { accessToken } = req.body;
+
+    if (!accessToken) {
+        return res.status(400).json({ result: false, msg: "카카오 액세스 토큰이 필요합니다." });
+    }
+
+    try {
+        // 카카오 사용자 정보 조회 (Node.js 내장 fetch 사용)
+        const response = await fetch('https://kapi.kakao.com/v2/user/me', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`카카오 API 호출 실패: ${response.status}`);
+        }
+
+        const kakaoUserInfo = await response.json();
+        const kakaoId = kakaoUserInfo.id.toString();
+        const kakaoEmail = kakaoUserInfo.kakao_account?.email || null;
+        const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || `카카오${kakaoId.slice(-4)}`;
+        const kakaoProfileImg = kakaoUserInfo.kakao_account?.profile?.profile_image_url || null;
+
+        // 기존 사용자 확인 (카카오 ID로)
+        let sql = "SELECT * FROM INSTA_TBL_USER WHERE USER_ID = ? OR EMAILORPHONE = ?";
+        let [existingUsers] = await db.query(sql, [`kakao_${kakaoId}`, kakaoEmail || '']);
+
+        let user;
+        if (existingUsers.length > 0) {
+            // 기존 사용자 - 로그인 처리
+            user = existingUsers[0];
+            
+            // 프로필 이미지 업데이트 (있는 경우)
+            if (kakaoProfileImg && !user.PROFILE_IMG) {
+                let updateSql = "UPDATE INSTA_TBL_USER SET PROFILE_IMG = ? WHERE USER_ID = ?";
+                await db.query(updateSql, [kakaoProfileImg, user.USER_ID]);
+                user.PROFILE_IMG = kakaoProfileImg;
+            }
+        } else {
+            // 신규 사용자 - 자동 회원가입
+            let newUserId = `kakao_${kakaoId}_kakao`;
+            let insertSql = "INSERT INTO INSTA_TBL_USER(USER_ID, PASSWORD, USERNAME, EMAILORPHONE, PROFILE_IMG) VALUES (?,?,?,?,?)";
+            await db.query(insertSql, [
+                newUserId,
+                '', // 카카오 로그인은 비밀번호 없음
+                kakaoNickname,
+                kakaoEmail || '',
+                kakaoProfileImg
+            ]);
+
+            // 새로 생성된 사용자 정보 조회
+            let selectSql = "SELECT * FROM INSTA_TBL_USER WHERE USER_ID = ?";
+            let [newUser] = await db.query(selectSql, [newUserId]);
+            user = newUser[0];
+        }
+
+        // JWT 토큰 발급
+        const payload = {
+            userId: user.USER_ID,
+            userName: user.USERNAME,
+            status: "A"
+        };
+        const token = jwt.sign(payload, JWT_KEY, { expiresIn: "1h" });
+
+        return res.json({
+            result: true,
+            msg: `${user.USERNAME}님 환영합니다!`,
+            token,
+            user: {
+                userId: user.USER_ID,
+                userName: user.USERNAME,
+                profileImg: user.PROFILE_IMG
+            }
+        });
+
+    } catch (error) {
+        console.error("카카오 로그인 에러:", error);
+        if (error.response) {
+            console.error("카카오 API 응답:", error.response.data);
+        }
+        return res.status(500).json({ 
+            result: false, 
+            msg: "카카오 로그인 중 오류가 발생했습니다." 
+        });
     }
 });
 
