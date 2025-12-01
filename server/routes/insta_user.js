@@ -261,14 +261,22 @@ router.post("/kakao/login", async (req, res) => {
         const kakaoNickname = kakaoUserInfo.kakao_account?.profile?.nickname || `카카오${kakaoId.slice(-4)}`;
         const kakaoProfileImg = kakaoUserInfo.kakao_account?.profile?.profile_image_url || null;
 
-        // 기존 사용자 확인 (카카오 ID로)
-        let sql = "SELECT * FROM INSTA_TBL_USER WHERE USER_ID = ? OR EMAILORPHONE = ?";
-        let [existingUsers] = await db.query(sql, [`kakao_${kakaoId}`, kakaoEmail || '']);
+        // 기존 사용자 확인 (카카오 ID로) - 두 가지 형태 모두 확인
+        let sql = "SELECT * FROM INSTA_TBL_USER WHERE (USER_ID = ? OR USER_ID = ?) OR EMAILORPHONE = ?";
+        let [existingUsers] = await db.query(sql, [`kakao_${kakaoId}`, `kakao_${kakaoId}_kakao`, kakaoEmail || '']);
 
         let user;
         if (existingUsers.length > 0) {
             // 기존 사용자 - 로그인 처리
             user = existingUsers[0];
+
+            // 기존 사용자가 kakao_${kakaoId} 형태로 저장되어 있다면 kakao_${kakaoId}_kakao로 업데이트
+            if (user.USER_ID === `kakao_${kakaoId}`) {
+                let newUserId = `kakao_${kakaoId}_kakao`;
+                let updateSql = "UPDATE INSTA_TBL_USER SET USER_ID = ? WHERE USER_ID = ?";
+                await db.query(updateSql, [newUserId, user.USER_ID]);
+                user.USER_ID = newUserId;
+            }
 
             // 프로필 이미지 업데이트 (있는 경우)
             if (kakaoProfileImg && !user.PROFILE_IMG) {
@@ -277,7 +285,7 @@ router.post("/kakao/login", async (req, res) => {
                 user.PROFILE_IMG = kakaoProfileImg;
             }
         } else {
-            // 신규 사용자 - 자동 회원가입
+            // 신규 사용자 - 자동 회원가입 (앞뒤로 kakao 붙이기)
             let newUserId = `kakao_${kakaoId}_kakao`;
             let insertSql = "INSERT INTO INSTA_TBL_USER(USER_ID, PASSWORD, USERNAME, EMAILORPHONE, PROFILE_IMG) VALUES (?,?,?,?,?)";
             await db.query(insertSql, [

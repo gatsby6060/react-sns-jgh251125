@@ -21,6 +21,7 @@ import InstaExplore from './components/InstaExplore';
 import InstaFindPassword from './components/InstaFindPassword';
 import InstaResetPassword from './components/InstaResetPassword';
 import InstaEditProfile from './components/InstaEditProfile';
+import InstaDirect from './components/InstaDirect';
 
 function App() {
   const location = useLocation();
@@ -53,6 +54,7 @@ function App() {
           <Route path="/instafindpassword" element={<InstaFindPassword />} />
           <Route path="/instaresetpassword" element={<InstaResetPassword />} />
           <Route path="/instaeditprofile" element={<InstaEditProfile />} />
+          <Route path="/direct" element={<InstaDirect />} />
         </Routes>
       </Box>
     </Box>

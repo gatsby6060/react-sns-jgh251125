@@ -9,6 +9,7 @@ const instaHomeRouter = require("./routes/insta_home");
 const instaUserRouter = require("./routes/insta_user");
 const instaFeedRouter = require("./routes/insta_feed");
 const instaCommentRouter = require("./routes/insta_comment");
+const instaMessageRouter = require("./routes/insta_message");
 
 const app = express()
 app.use(cors({
@@ -26,6 +27,7 @@ app.use("/instahome", instaHomeRouter);
 app.use("/instauser", instaUserRouter);
 app.use("/instafeed", instaFeedRouter);
 app.use("/instacomment", instaCommentRouter);
+app.use("/instamessage", instaMessageRouter);
 
 
 
