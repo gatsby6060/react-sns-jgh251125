@@ -292,7 +292,7 @@ function InstaLogin() {
             </Button>
 
             <Typography variant="body2" sx={{ mt: 2 }}>
-              <MuiLink component={Link} to="/find-password" underline="none">
+              <MuiLink component={Link} to="/instafindpassword" underline="none">
                 비밀번호를 잊으셨나요?
               </MuiLink>
             </Typography>

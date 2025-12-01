@@ -110,7 +110,7 @@ function InstaProfile() {
     setImgLoading(true);
     setImages([]);
     setCurrentImgIdx(0);
-    
+
     // 추가 이미지 가져오기
     fetch(`http://localhost:3010/instahome/${feed.FEED_ID}/images`)
       .then(res => res.json())
@@ -129,11 +129,11 @@ function InstaProfile() {
       .catch(err => {
         console.error(err);
         if (feed.ImgPath || feed.imgPath) {
-          setImages([{ 
-            imgNo: -1, 
-            ImgPath: feed.ImgPath || feed.imgPath, 
+          setImages([{
+            imgNo: -1,
+            ImgPath: feed.ImgPath || feed.imgPath,
             mediaType: feed.mediaType,
-            imgName: feed.imgName || 'primary-media' 
+            imgName: feed.imgName || 'primary-media'
           }]);
         }
         setImgLoading(false);
@@ -358,9 +358,9 @@ function InstaProfile() {
         {/* 프로필 이미지 */}
         <Box sx={{ mr: 5 }}>
           <Avatar
-            sx={{ 
-              width: 150, 
-              height: 150, 
+            sx={{
+              width: 150,
+              height: 150,
               border: '1px solid #dbdbdb',
               cursor: 'pointer',
               '&:hover': {
@@ -395,6 +395,7 @@ function InstaProfile() {
               variant="outlined"
               size="small"
               sx={{ mr: 1, textTransform: 'none', borderRadius: '4px' }}
+              onClick={() => navigate('/instaeditprofile')}
             >
               프로필 편집
             </Button>
@@ -555,7 +556,7 @@ function InstaProfile() {
                       <video
                         src={images[currentImgIdx].ImgPath}
                         controls
-                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto'}}
+                        style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'contain', height: 'auto' }}
                       >
                         지원하지 않는 동영상 형식입니다.
                       </video>

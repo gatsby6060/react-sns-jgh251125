@@ -114,12 +114,27 @@ router.delete("/:feedid", authMiddleware, async (req, res) => {
     }
 })
 
+// router.post("/", async (req, res) => {
+//     let { userId, content } = req.body;
+//     try {
+//         let sql = "INSERT INTO insta_tbl_feed (USER_ID, CONTENT, CREATED_AT) VALUES "
+//             + "(? , ?, NOW()) ";
+//         let result = await db.query(sql, [userId, content]);
+//         res.json({
+//             result: result,
+//             msg: "success"
+//         })
+//     } catch (error) {
+//         console.log("데이터 삽입 중에 에러발생함 ", error);
+//     }
+// })
 router.post("/", async (req, res) => {
-    let { userId, content } = req.body;
+    console.log("인서트 위한 포스트통신 진입");
+    let { userId, content, title } = req.body;
+    console.log("인서트직전 title는 "+ title);
     try {
-        let sql = "INSERT INTO insta_tbl_feed (USER_ID, CONTENT, CREATED_AT) VALUES "
-            + "(? , ?, NOW()) ";
-        let result = await db.query(sql, [userId, content]);
+        let sql = "INSERT INTO insta_tbl_feed (USER_ID, TITLE, CONTENT, CREATED_AT) VALUES (?, ?, ?, NOW())";
+        let result = await db.query(sql, [userId, title, content]);
         res.json({
             result: result,
             msg: "success"

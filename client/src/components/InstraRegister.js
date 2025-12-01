@@ -20,7 +20,10 @@ import { useNavigate } from 'react-router-dom';
 
 function Register() {
   const [files, setFile] = React.useState([]);
+
+  let titleRef = useRef();
   let contentRef = useRef();
+
   let navigate = useNavigate();
 
   // const handleFileChange = (event) => {
@@ -40,6 +43,7 @@ function Register() {
     const token = localStorage.getItem("token");
     const decoded = jwtDecode(token);
     let param = {
+      title: titleRef.current.value,
       content: contentRef.current.value,
       userId: decoded.userId,
     }
@@ -106,7 +110,13 @@ function Register() {
           </Select>
         </FormControl>
 
-        <TextField label="제목" variant="outlined" margin="normal" fullWidth />
+        <TextField
+          inputRef={titleRef}
+          label="제목"
+          variant="outlined"
+          margin="normal"
+          fullWidth />
+
         <TextField
           inputRef={contentRef}
           label="내용"

@@ -33,6 +33,8 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { useRef } from 'react';
+
 
 function InstaHome() {
   //상세이미지에서 여러 사진을 더 보여주려고 추가
@@ -49,29 +51,63 @@ function InstaHome() {
   let [currentUserId, setCurrentUserId] = useState('');
   let navigate = useNavigate();
 
-function fnGetFeed() {
+  const [currentUser, setCurrentUser] = useState(null);
+  // 상대경로면 서버 호스트를 붙여 절대 URL로 만듭니다.
+  const normalizeUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `http://localhost:3010${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  async function fnGetFeed() {
     const token = localStorage.getItem("token");
-    if (token) {
-        const decoded = jwtDecode(token);
-        console.log("decode==> ", decoded);
-        setCurrentUserId(decoded.userId);
-        
-        // 💡 수정된 부분: fetch 요청 시 Authorization 헤더에 토큰 추가
-        fetch("http://localhost:3010/instahome", { 
-            headers: {
-                "Authorization": "Bearer " + token, // 백엔드의 authMiddleware가 이 토큰을 읽게 됩니다.
-            }
-        })
-          .then(res => res.json())
-          .then(data => {
-            console.log("인스타피드, 돌아온데이터 " + JSON.stringify(data));
-            setFeeds(data.list);
-          })
-    } else {
+    if (!token) {
       alert("로그인 해주세요");
       navigate("/instalogin");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      setCurrentUserId(decoded.userId);
+
+      // 1) 현재 사용자 정보(우측 요약 아바타용) 가져오기 (선택: 실패해도 진행)
+      try {
+        const curRes = await fetch(`http://localhost:3010/instauser/${decoded.userId}`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const curData = await curRes.json();
+        if (curData && curData.user) {
+          curData.user.PROFILE_IMG = normalizeUrl(curData.user.PROFILE_IMG);
+          setCurrentUser(curData.user);
+        }
+      } catch (e) {
+        console.warn('current user load failed', e);
+        setCurrentUser(null);
+      }
+
+      // 2) 피드 목록 가져오기
+      const res = await fetch("http://localhost:3010/instahome", {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      const list = Array.isArray(data.list) ? data.list : [];
+
+      // 3) 정규화: ImgPath, USER_PROFILE_IMG 필드 사용(서버가 줄 것으로 기대)
+      const normalized = list.map(f => ({
+        ...f,
+        ImgPath: normalizeUrl(f.ImgPath || f.imgPath || null),
+        USER_PROFILE_IMG: normalizeUrl(f.USER_PROFILE_IMG || f.PROFILE_IMG || f.userProfileImg || null)
+      }));
+
+      setFeeds(normalized);
+      console.log('normalized feeds:', normalized);
+    } catch (err) {
+      console.error('fnGetFeed error', err);
+      setFeeds([]);
     }
   }
+
 
   useEffect(() => {
     fnGetFeed()
@@ -199,50 +235,57 @@ function fnGetFeed() {
 
 
   const heartIconClick = (feed) => {
-    alert("heartIconClick 버튼 눌림");
     const token = localStorage.getItem("token");
-
     if (!token) {
       alert("로그인 해주세요");
       navigate("/instalogin");
       return;
     }
 
-    // 현재 사용자 ID는 이미 currentUserId 상태에 저장되어 있으므로 그걸 사용합니다.
-    // const decoded = jwtDecode(token);
-    // const userId = decoded.userId;
+    // UI 즉시 반영
+    setFeeds((prevFeeds) =>
+      prevFeeds.map((f) => {
+        if (f.FEED_ID === feed.FEED_ID) {
+          const liked = !f.isLiked;
+          return {
+            ...f,
+            isLiked: liked,
+            LIKE_COUNT: liked ? (f.LIKE_COUNT || 0) + 1 : (f.LIKE_COUNT || 0) - 1,
+          };
+        }
+        return f;
+      })
+    );
 
-    // 좋아요 업데이트 요청 (좋아요/좋아요 취소 토글 로직은 백엔드에서 처리한다고 가정)
-    // 좋아요 엔드포인트는 /instaheart와 같이 POST/PUT 요청으로 만들 수 있습니다.
-    fetch('http://localhost:3010/instafeed/instaheart', { // 💡 백엔드 엔드포인트는 /instaheart로 가정합니다.
-      method: 'POST', // 좋아요 업데이트는 PUT 사용합니다.(POST로 보내기도함 서버 정하기 마음)
+    // 서버에 좋아요/취소 요청
+    fetch('http://localhost:3010/instafeed/instaheart', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}` // 토큰을 헤더에 포함
-        "Authorization": "Bearer " + localStorage.getItem("token"), // 토큰을 헤더에 포함
+        'Authorization': "Bearer " + token,
       },
       body: JSON.stringify({
-        feedId: feed.FEED_ID, // 현재 피드의 ID
-        userId: currentUserId, // 현재 로그인한 사용자 ID
-      })
+        feedId: feed.FEED_ID,
+        userId: currentUserId,
+      }),
     })
       .then(res => res.json())
       .then(data => {
-        if (data.result === 'success') {
-          // 성공적으로 업데이트되면 피드 목록을 새로고침하여 '좋아요 수'를 업데이트합니다.
-          // data.message는 "좋아요가 추가되었습니다" 또는 "좋아요가 취소되었습니다"일 수 있습니다.
-          alert(data.message || "좋아요 상태가 변경되었습니다.");
-          fnGetFeed(); // 피드 목록 새로고침
-        } else {
-          alert(data.message || '좋아요 업데이트에 실패했습니다.');
+        if (data.result !== 'success') {
+          alert(data.message || '좋아요 업데이트 실패');
+          // 실패하면 상태 롤백
+          setFeeds((prevFeeds) =>
+            prevFeeds.map((f) => f.FEED_ID === feed.FEED_ID ? { ...f, isLiked: feed.isLiked, LIKE_COUNT: feed.LIKE_COUNT } : f)
+          );
         }
       })
-      .catch(error => {
-        console.error('좋아요 업데이트 중 에러:', error);
-        alert('좋아요 업데이트 중 오류가 발생했습니다.');
+      .catch(err => {
+        console.error(err);
+        // 에러 발생 시 상태 롤백
+        setFeeds((prevFeeds) =>
+          prevFeeds.map((f) => f.FEED_ID === feed.FEED_ID ? { ...f, isLiked: feed.isLiked, LIKE_COUNT: feed.LIKE_COUNT } : f)
+        );
       });
-
-
   };
 
 
@@ -362,7 +405,12 @@ function fnGetFeed() {
                 <Card key={feed.FEED_ID || feed.id} sx={{ mb: 4, border: '1px solid #dbdbdb', boxShadow: 'none' }}>
                   {/* 피드 헤더 */}
                   <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ width: 32, height: 32, mr: 1 }} />
+                    <Avatar
+                      sx={{ width: 32, height: 32, mr: 1 }}
+                      src={feed.USER_PROFILE_IMG || feed.PROFILE_IMG || '/fallback-avatar.png'}
+                      alt={feed.USERNAME || feed.USER_ID || feed.userId}
+                      onError={(e) => { e.currentTarget.src = '/fallback-avatar.png'; }}
+                    />
                     <Typography variant="subtitle2" fontWeight="bold">{feed.USER_ID || feed.userId}</Typography>
                     <Box sx={{ flexGrow: 1 }} />
                     <IconButton size="small">...</IconButton>
@@ -373,13 +421,37 @@ function fnGetFeed() {
                     onClick={() => handleClickOpen(feed)}
                     sx={{ cursor: 'pointer', maxHeight: '1000px', objectFit: 'cover', maxWidth: '600px' }}
                   >
+
                     {feed.mediaType === 'video' ? (
                       <video
-                        src={feed.ImgPath} // 서버에서 전달받은 경로
-                        controls // 재생 컨트롤 표시
-                        muted // 자동 재생 시 음소거 (선택 사항)
-                        // autoPlay // 자동 재생 (선택 사항)
-                        loop // 반복 재생 (선택 사항)
+                        ref={(el) => {
+                          if (!el) return;
+
+                          const observer = new IntersectionObserver(
+                            ([entry]) => {
+                              if (!el) return;
+                              try {
+                                if (entry.isIntersecting) {
+                                  el.play().catch(err => {
+                                    // play 중 오류 무시 (자동 재생 차단 등)
+                                    console.warn('Video play error:', err);
+                                  });
+                                } else {
+                                  el.pause();
+                                }
+                              } catch (err) {
+                                console.warn('Video play/pause error:', err);
+                              }
+                            },
+                            { threshold: 0.5 }
+                          );
+
+                          observer.observe(el);
+                        }}
+                        src={feed.ImgPath}
+                        controls
+                        muted
+                        loop
                         style={{ width: '100%', maxHeight: '600px', objectFit: 'cover' }}
                       >
                         지원하지 않는 동영상 형식입니다.
@@ -442,7 +514,13 @@ function fnGetFeed() {
             <Box position="fixed" width={{ md: 300 }}>
               {/* 내 프로필 요약 */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ width: 56, height: 56, mr: 2 }} />
+                <Avatar
+                  sx={{ width: 56, height: 56, mr: 2 }}
+                  src={currentUser?.PROFILE_IMG || '/fallback-avatar.png'}
+                  alt={currentUser?.USERNAME || currentUser?.USER_ID || 'currentUser'}
+                  onError={(e) => { e.currentTarget.src = '/fallback-avatar.png'; }}
+                />
+
                 <Box>
                   <Typography variant="subtitle1" fontWeight="bold">currentUser</Typography>
                   <Typography variant="body2" color="textSecondary">내 이름</Typography>

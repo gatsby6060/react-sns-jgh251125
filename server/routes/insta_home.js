@@ -118,75 +118,153 @@ const getMediaType = (path) => {
 //     }
 // });
 
+// router.get("/", async (req, res) => {
+//     console.log("insta_home.js파일진입  get / 진입");
+//     try {
+//         let sql = `
+//             SELECT I.imgNo, I.ImgPath, F.* FROM insta_tbl_feed F
+//              LEFT JOIN insta_tbl_feed_img I
+//              ON F.FEED_ID = I.feedId
+//              AND I.imgNo = (
+//                  SELECT MIN(imgNo)
+//                  FROM insta_tbl_feed_img
+//                  WHERE feedId = F.FEED_ID
+//              )
+//              ORDER BY F.CREATED_AT DESC;
+//         `;
+
+//         let [list] = await db.query(sql);
+
+//         const feedsWithMediaType = list.map(feed => {
+//             const mediaType = getMediaType(feed.ImgPath);
+//             return {
+//                 ...feed,
+//                 mediaType: mediaType
+//             };
+//         });
+
+//         res.json({ list: feedsWithMediaType, result: "success" });
+//     } catch (error) {
+//         console.log("전체 피드 조회 중 에러발생함 ", error);
+//         res.status(500).json({ error: "Failed to fetch feeds" });
+//     }
+// });
+
 router.get("/", async (req, res) => {
-    console.log("insta_home.js파일진입  get / 진입");
+    console.log("insta_home.js get / 진입");
     try {
         let sql = `
-            SELECT I.imgNo, I.ImgPath, F.* FROM insta_tbl_feed F
-             LEFT JOIN insta_tbl_feed_img I
-             ON F.FEED_ID = I.feedId
-             AND I.imgNo = (
-                 SELECT MIN(imgNo)
-                 FROM insta_tbl_feed_img
-                 WHERE feedId = F.FEED_ID
-             )
-             ORDER BY F.CREATED_AT DESC;
+            SELECT 
+                F.*, 
+                I.imgNo, 
+                I.ImgPath,
+                U.PROFILE_IMG AS USER_PROFILE_IMG,
+                U.USERNAME
+            FROM insta_tbl_feed F
+            LEFT JOIN insta_tbl_feed_img I
+                ON F.FEED_ID = I.feedId
+                AND I.imgNo = (
+                    SELECT MIN(imgNo)
+                    FROM insta_tbl_feed_img
+                    WHERE feedId = F.FEED_ID
+                )
+            LEFT JOIN insta_tbl_user U
+                ON F.USER_ID = U.USER_ID
+            ORDER BY F.CREATED_AT DESC
         `;
 
         let [list] = await db.query(sql);
 
-        const feedsWithMediaType = list.map(feed => {
-            const mediaType = getMediaType(feed.ImgPath);
-            return {
-                ...feed,
-                mediaType: mediaType
-            };
-        });
+        const feedsWithMediaType = list.map(feed => ({
+            ...feed,
+            mediaType: getMediaType(feed.ImgPath)
+        }));
 
         res.json({ list: feedsWithMediaType, result: "success" });
     } catch (error) {
-        console.log("전체 피드 조회 중 에러발생함 ", error);
+        console.log("전체 피드 조회 중 에러:", error);
         res.status(500).json({ error: "Failed to fetch feeds" });
     }
 });
 
+
+
+// router.get("/:userId", async (req, res) => {
+//     let { userId } = req.params;
+
+//     try {
+//         let sql = `
+//             SELECT I.imgNo, I.ImgPath, I.imgName, F.* 
+//             FROM insta_tbl_feed F
+//             LEFT JOIN insta_tbl_feed_img I 
+//             ON F.FEED_ID = I.feedId
+//             AND I.imgNo = (
+//                 SELECT MIN(imgNo)
+//                 FROM insta_tbl_feed_img
+//                 WHERE feedId = F.FEED_ID
+//             )
+//             WHERE F.USER_ID = ?
+//             ORDER BY F.CREATED_AT DESC
+//         `;
+//         let [list] = await db.query(sql, [userId]);
+        
+//         const feedsWithMediaType = list.map(feed => {
+//             const mediaType = getMediaType(feed.ImgPath);
+//             return {
+//                 ...feed,
+//                 mediaType: mediaType
+//             };
+//         });
+        
+//         res.json({
+//             list: feedsWithMediaType,
+//             result: "success"
+//         })
+//     } catch (error) {
+//         console.log("에러발생함 ", error);
+//         res.status(500).json({ result: "error", message: "피드 조회 중 오류가 발생했습니다." });
+//     }
+// })
 
 router.get("/:userId", async (req, res) => {
     let { userId } = req.params;
 
     try {
         let sql = `
-            SELECT I.imgNo, I.ImgPath, I.imgName, F.* 
+            SELECT 
+                F.*, 
+                I.imgNo, 
+                I.ImgPath, 
+                I.imgName,
+                U.PROFILE_IMG AS USER_PROFILE_IMG,
+                U.USERNAME
             FROM insta_tbl_feed F
-            LEFT JOIN insta_tbl_feed_img I 
-            ON F.FEED_ID = I.feedId
-            AND I.imgNo = (
-                SELECT MIN(imgNo)
-                FROM insta_tbl_feed_img
-                WHERE feedId = F.FEED_ID
-            )
+            LEFT JOIN insta_tbl_feed_img I
+                ON F.FEED_ID = I.feedId
+                AND I.imgNo = (
+                    SELECT MIN(imgNo)
+                    FROM insta_tbl_feed_img
+                    WHERE feedId = F.FEED_ID
+                )
+            LEFT JOIN insta_tbl_user U
+                ON F.USER_ID = U.USER_ID
             WHERE F.USER_ID = ?
             ORDER BY F.CREATED_AT DESC
         `;
         let [list] = await db.query(sql, [userId]);
-        
-        const feedsWithMediaType = list.map(feed => {
-            const mediaType = getMediaType(feed.ImgPath);
-            return {
-                ...feed,
-                mediaType: mediaType
-            };
-        });
-        
-        res.json({
-            list: feedsWithMediaType,
-            result: "success"
-        })
+
+        const feedsWithMediaType = list.map(feed => ({
+            ...feed,
+            mediaType: getMediaType(feed.ImgPath)
+        }));
+
+        res.json({ list: feedsWithMediaType, result: "success" });
     } catch (error) {
-        console.log("에러발생함 ", error);
+        console.log("에러발생:", error);
         res.status(500).json({ result: "error", message: "피드 조회 중 오류가 발생했습니다." });
     }
-})
+});
+
 
 
 
@@ -220,20 +298,21 @@ router.delete("/:feedid", authMiddleware, async (req, res) => {
     }
 })
 
-router.post("/", async (req, res) => {
-    let { userId, content } = req.body;
-    try {
-        let sql = "INSERT INTO insta_tbl_feed (USER_ID, CONTENT, CREATED_AT) VALUES "
-            + "(? , ?, NOW()) ";
-        let result = await db.query(sql, [userId, content]);
-        res.json({
-            result: result,
-            msg: "success"
-        })
-    } catch (error) {
-        console.log("데이터 삽입 중에 에러발생함 ", error);
-    }
-})
+// router.post("/", async (req, res) => {
+//     console.log("인서트 위한 포스트통신 진입");
+//     let { userId, content, title } = req.body;
+//     console.log("인서트직전 title는 "+ title);
+//     try {
+//         let sql = "INSERT INTO insta_tbl_feed (USER_ID, TITLE, CONTENT, CREATED_AT) VALUES (?, ?, ?, NOW())";
+//         let result = await db.query(sql, [userId, title, content]);
+//         res.json({
+//             result: result,
+//             msg: "success"
+//         })
+//     } catch (error) {
+//         console.log("데이터 삽입 중에 에러발생함 ", error);
+//     }
+// })
 
 router.get("/:feedId/images", async (req, res) => {
     const feedId = req.params.feedId;

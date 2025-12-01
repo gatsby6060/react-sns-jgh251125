@@ -18,10 +18,17 @@ import InstaMenu from './components/InstaMenu';
 import InstaRegister from './components/InstraRegister';
 import InstaProfile from './components/InstaProfile';
 import InstaExplore from './components/InstaExplore'; 
+import InstaFindPassword from './components/InstaFindPassword';
+import InstaResetPassword from './components/InstaResetPassword';
+import InstaEditProfile from './components/InstaEditProfile';
 
 function App() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/' || location.pathname === '/join' || location.pathname === '/instalogin' || location.pathname === '/instajoin';
+  const isAuthPage = location.pathname === '/' 
+                    || location.pathname === '/join' 
+                    || location.pathname === '/instalogin' 
+                    || location.pathname === '/instajoin'
+                    || location.pathname === '/instafindpassword';
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -42,7 +49,10 @@ function App() {
           <Route path="/instahome" element={<InstaHome />} />
           <Route path="/instaregister" element={<InstaRegister />} />
           <Route path="/instaprofile" element={<InstaProfile />} />
-          <Route path="/explore" element={<InstaExplore />} />
+          <Route path="/instaexplore" element={<InstaExplore />} />
+          <Route path="/instafindpassword" element={<InstaFindPassword />} />
+          <Route path="/instaresetpassword" element={<InstaResetPassword />} />
+          <Route path="/instaeditprofile" element={<InstaEditProfile />} />
         </Routes>
       </Box>
     </Box>
