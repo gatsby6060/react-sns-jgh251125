@@ -526,13 +526,27 @@ function InstaHome() {
                   <Typography variant="body2" color="textSecondary">내 이름</Typography>
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
-                <Button variant="text" size="small" sx={{ fontWeight: 'bold' }}>전환</Button>
+                <Button 
+                  variant="text" 
+                  size="small" 
+                  sx={{ fontWeight: 'bold' }}
+                  onClick={() => alert('구현 예정입니다')}
+                >
+                  전환
+                </Button>
               </Box>
 
               {/* 추천 섹션 */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="subtitle2" color="textSecondary" fontWeight="bold">회원님을 위한 추천</Typography>
-                <Button variant="text" size="small" sx={{ fontWeight: 'bold' }}>모두 보기</Button>
+                <Button 
+                  variant="text" 
+                  size="small" 
+                  sx={{ fontWeight: 'bold' }}
+                  onClick={() => alert('구현 예정입니다')}
+                >
+                  모두 보기
+                </Button>
               </Box>
 
               <List disablePadding>
@@ -545,7 +559,12 @@ function InstaHome() {
                       primary={<Typography variant="subtitle2" fontWeight="bold">{rec.id}</Typography>}
                       secondary={<Typography variant="body2" color="textSecondary">{rec.name}</Typography>}
                     />
-                    <Button variant="text" size="small" sx={{ color: '#0095f6', fontWeight: 'bold' }}>
+                    <Button 
+                      variant="text" 
+                      size="small" 
+                      sx={{ color: '#0095f6', fontWeight: 'bold' }}
+                      onClick={() => alert('구현 예정입니다')}
+                    >
                       팔로우
                     </Button>
                   </ListItem>

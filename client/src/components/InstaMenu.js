@@ -152,7 +152,7 @@ function Menu() {
         </ListItem>
 
         {/* 4. 알림 */}
-        <ListItem button component={Link} to="/notifications">
+        <ListItem button component={Link} to="/instanotifications">
           <ListItemIcon>
             <FavoriteBorder />
           </ListItemIcon>

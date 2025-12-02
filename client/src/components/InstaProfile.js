@@ -24,11 +24,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 function InstaProfile() {
-  // const { userId } = useParams(); // URL에서 userId 가져오기
+  const { userId: urlUserId } = useParams(); // URL에서 userId 가져오기
   let [user, setUser] = useState(null);
   let [feeds, setFeeds] = useState([]);
   let [currentUserId, setCurrentUserId] = useState('');
@@ -47,59 +47,90 @@ function InstaProfile() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const fileInputRef = React.useRef(null);
 
+  // URL 정규화 함수
+  const normalizeUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `http://localhost:3010${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   function fnGetUser() {
     const token = localStorage.getItem("token");
-    if (token) {
-      const decoded = jwtDecode(token);
-      console.log("decode==> ", decoded);
-      setCurrentUserId(decoded.userId);
-      // 사용자 정보 가져오기
-      fetch("http://localhost:3010/instauser/user/" + decoded.userId)
-        .then(res => res.json())
-        .then(data => {
-          console.log("사용자 정보: ", data);
-          setUser(data.user);
-        })
-        .catch(err => {
-          console.error("사용자 정보 조회 중 에러:", err);
-        });
-
-      // 사용자 피드 목록 가져오기
-      fetch("http://localhost:3010/instahome/" + decoded.userId)
-        .then(res => res.json())
-        .then(data => {
-          console.log("피드 목록 원본 데이터: ", data);
-          if (data.list && Array.isArray(data.list)) {
-            // 중복 제거 (FEED_ID 기준)
-            const uniqueFeeds = [];
-            const seenFeedIds = new Set();
-            data.list.forEach(feed => {
-              const feedId = feed.FEED_ID || feed.id;
-              if (feedId && !seenFeedIds.has(feedId)) {
-                seenFeedIds.add(feedId);
-                uniqueFeeds.push(feed);
-                console.log("피드 추가:", feedId, "이미지 경로:", feed.ImgPath || feed.imgPath);
-              }
-            });
-            console.log("최종 피드 개수:", uniqueFeeds.length);
-            setFeeds(uniqueFeeds);
-          } else {
-            setFeeds([]);
-          }
-        })
-        .catch(err => {
-          console.error("피드 목록 조회 중 에러:", err);
-          setFeeds([]);
-        });
-    } else {
+    if (!token) {
       alert("로그인 해주세요");
       navigate("/instalogin");
+      return;
     }
+
+    const decoded = jwtDecode(token);
+    console.log("decode==> ", decoded);
+    setCurrentUserId(decoded.userId);
+
+    // URL 파라미터에서 userId를 가져오거나, 없으면 현재 로그인한 사용자의 userId 사용
+    const targetUserId = urlUserId || decoded.userId;
+    console.log("조회할 사용자 ID:", targetUserId);
+
+    // 사용자 정보 가져오기
+    fetch(`http://localhost:3010/instauser/user/${targetUserId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("사용자 정보: ", data);
+        if (data.user) {
+          // URL 정규화 적용
+          const normalizedUser = {
+            ...data.user,
+            PROFILE_IMG: normalizeUrl(data.user.PROFILE_IMG)
+          };
+          setUser(normalizedUser);
+        } else {
+          alert("사용자를 찾을 수 없습니다.");
+          navigate("/instahome");
+        }
+      })
+      .catch(err => {
+        console.error("사용자 정보 조회 중 에러:", err);
+        alert("사용자 정보를 불러오는 중 오류가 발생했습니다.");
+      });
+
+    // 사용자 피드 목록 가져오기
+    fetch(`http://localhost:3010/instahome/${targetUserId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("피드 목록 원본 데이터: ", data);
+        if (data.list && Array.isArray(data.list)) {
+          // 중복 제거 및 URL 정규화
+          const uniqueFeeds = [];
+          const seenFeedIds = new Set();
+          data.list.forEach(feed => {
+            const feedId = feed.FEED_ID || feed.id;
+            if (feedId && !seenFeedIds.has(feedId)) {
+              seenFeedIds.add(feedId);
+              uniqueFeeds.push({
+                ...feed,
+                ImgPath: normalizeUrl(feed.ImgPath || feed.imgPath)
+              });
+              console.log("피드 추가:", feedId, "이미지 경로:", feed.ImgPath || feed.imgPath);
+            }
+          });
+          console.log("최종 피드 개수:", uniqueFeeds.length);
+          setFeeds(uniqueFeeds);
+        } else {
+          setFeeds([]);
+        }
+      })
+      .catch(err => {
+        console.error("피드 목록 조회 중 에러:", err);
+        setFeeds([]);
+      });
   }
 
   useEffect(() => {
     fnGetUser();
-  }, []);
+  }, [urlUserId]); // urlUserId가 변경될 때마다 다시 로드
 
   const handleClickOpen = (feed) => {
     setSelectedFeed(feed);
@@ -362,13 +393,18 @@ function InstaProfile() {
               width: 150,
               height: 150,
               border: '1px solid #dbdbdb',
-              cursor: 'pointer',
+              cursor: (currentUserId === (urlUserId || user?.USER_ID)) ? 'pointer' : 'default',
               '&:hover': {
-                opacity: 0.8
+                opacity: (currentUserId === (urlUserId || user?.USER_ID)) ? 0.8 : 1
               }
             }}
             src={user.PROFILE_IMG || ''}
-            onClick={() => setProfileModalOpen(true)}
+            onClick={() => {
+              // 본인 프로필일 때만 프로필 사진 변경 가능
+              if (currentUserId === (urlUserId || user?.USER_ID)) {
+                setProfileModalOpen(true);
+              }
+            }}
           />
           <input
             type="file"
@@ -391,22 +427,37 @@ function InstaProfile() {
             <Typography variant="h5" sx={{ mr: 2, fontWeight: 300 }}>
               {user.USERNAME || user.USER_ID}
             </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ mr: 1, textTransform: 'none', borderRadius: '4px' }}
-              onClick={() => navigate('/instaeditprofile')}
-            >
-              프로필 편집
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              sx={{ textTransform: 'none', borderRadius: '4px' }}
-            >
-              보관함 보기
-            </Button>
-            <SettingsIcon sx={{ ml: 1, cursor: 'pointer' }} />
+            {/* 본인 프로필일 때만 편집 버튼 표시 */}
+            {currentUserId === (urlUserId || user?.USER_ID) && (
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ mr: 1, textTransform: 'none', borderRadius: '4px' }}
+                  onClick={() => navigate('/instaeditprofile')}
+                >
+                  프로필 편집
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ textTransform: 'none', borderRadius: '4px' }}
+                >
+                  보관함 보기
+                </Button>
+                <SettingsIcon sx={{ ml: 1, cursor: 'pointer' }} />
+              </>
+            )}
+            {/* 다른 사용자 프로필일 때는 팔로우 버튼 표시 (추후 구현 가능) */}
+            {currentUserId !== (urlUserId || user?.USER_ID) && (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ textTransform: 'none', borderRadius: '4px', backgroundColor: '#0095f6' }}
+              >
+                팔로우
+              </Button>
+            )}
           </Box>
 
           {/* 통계 정보 */}

@@ -37,18 +37,32 @@ function InstaExplore() {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [imgLoading, setImgLoading] = useState(false);
 
+  // 상대경로면 서버 호스트를 붙여 절대 URL로 만듭니다.
+  const normalizeUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `http://localhost:3010${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   function fnGetExplore() {
     const token = localStorage.getItem("token");
     if (token) {
       const decoded = jwtDecode(token);
       console.log("decode==> ", decoded);
       setCurrentUserId(decoded.userId);
-      fetch("http://localhost:3010/instahome")
+      fetch("http://localhost:3010/instahome", {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
         .then(res => res.json())
         .then(data => {
           console.log("탐색 피드, 돌아온데이터 " + JSON.stringify(data));
           if (data.list && Array.isArray(data.list)) {
-            setFeeds(data.list);
+            // URL 정규화 적용
+            const normalized = data.list.map(f => ({
+              ...f,
+              ImgPath: normalizeUrl(f.ImgPath || f.imgPath || null),
+            }));
+            setFeeds(normalized);
           } else {
             setFeeds([]);
           }

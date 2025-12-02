@@ -23,6 +23,7 @@ import InstaResetPassword from './components/InstaResetPassword';
 import InstaEditProfile from './components/InstaEditProfile';
 import InstaDirect from './components/InstaDirect';
 import InstaSearch from './components/InstaSearch';
+import Instanotifications from './components/Instanotifications';
 
 
 function App() {
@@ -52,12 +53,14 @@ function App() {
           <Route path="/instahome" element={<InstaHome />} />
           <Route path="/instaregister" element={<InstaRegister />} />
           <Route path="/instaprofile" element={<InstaProfile />} />
+          <Route path="/profile/:userId" element={<InstaProfile />} />
           <Route path="/instaexplore" element={<InstaExplore />} />
           <Route path="/instafindpassword" element={<InstaFindPassword />} />
           <Route path="/instaresetpassword" element={<InstaResetPassword />} />
           <Route path="/instaeditprofile" element={<InstaEditProfile />} />
           <Route path="/instadirect" element={<InstaDirect />} />
           <Route path="/instasearch" element={<InstaSearch />} />
+          <Route path="/instanotifications" element={<Instanotifications />} />
         </Routes>
       </Box>
     </Box>
