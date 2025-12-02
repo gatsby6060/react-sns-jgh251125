@@ -21,9 +21,9 @@ function Menu() {
 
     const userId = decoded.userId;
     if (!userId) return;
-
+    
     // 사용자 정보 가져오기
-    fetch(`http://localhost:3010/instauser/${userId}`, {
+    fetch(`http://localhost:3010/instauser/user/${userId}`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -128,7 +128,7 @@ function Menu() {
         {/* </Typography>  */}
 
         {/* 1. 검색 */}
-        <ListItem button component={Link} to="/search">
+        <ListItem button component={Link} to="/instasearch">
           <ListItemIcon>
             <Search />
           </ListItemIcon>
@@ -144,7 +144,7 @@ function Menu() {
         </ListItem>
 
         {/* 3. 메시지 */}
-        <ListItem button component={Link} to="/direct">
+        <ListItem button component={Link} to="/instadirect">
           <ListItemIcon>
             <Send />
           </ListItemIcon>

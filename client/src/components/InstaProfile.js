@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 function InstaProfile() {
+  // const { userId } = useParams(); // URL에서 userId 가져오기
   let [user, setUser] = useState(null);
   let [feeds, setFeeds] = useState([]);
   let [currentUserId, setCurrentUserId] = useState('');
@@ -52,9 +53,8 @@ function InstaProfile() {
       const decoded = jwtDecode(token);
       console.log("decode==> ", decoded);
       setCurrentUserId(decoded.userId);
-
       // 사용자 정보 가져오기
-      fetch("http://localhost:3010/instauser/" + decoded.userId)
+      fetch("http://localhost:3010/instauser/user/" + decoded.userId)
         .then(res => res.json())
         .then(data => {
           console.log("사용자 정보: ", data);

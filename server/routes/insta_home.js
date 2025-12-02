@@ -12,27 +12,27 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/upload', upload.array('file'), async (req, res) => {
-    let { feedId } = req.body;
-    const files = req.files;
-    try {
-        let results = [];
-        let host = `${req.protocol}://${req.get("host")}/`;
-        for (let file of files) {
-            let filename = file.filename;
-            let destination = file.destination; // uploads/
-            // ⭐ 수정 1: 테이블 이름 통일
-            let query = "INSERT INTO insta_tbl_feed_img VALUES(NULL, ?, ?, ?)"; 
-            let result = await db.query(query, [feedId, filename, host + destination + filename]);
-            results.push(result);
-        }
-        res.json({
-            message: "result",
-            result: results
-        });
-    } catch (err) {
-        console.log("에러 발생!", err);
-        res.status(500).send("Server Error");
-    }
+    let { feedId } = req.body;
+    const files = req.files;
+    try {
+        let results = [];
+        let host = `${req.protocol}://${req.get("host")}/`;
+        for (let file of files) {
+            let filename = file.filename;
+            let destination = file.destination; // uploads/
+            // ⭐ 수정 1: 테이블 이름 통일
+            let query = "INSERT INTO insta_tbl_feed_img VALUES(NULL, ?, ?, ?)";
+            let result = await db.query(query, [feedId, filename, host + destination + filename]);
+            results.push(result);
+        }
+        res.json({
+            message: "result",
+            result: results
+        });
+    } catch (err) {
+        console.log("에러 발생!", err);
+        res.status(500).send("Server Error");
+    }
 });
 
 
@@ -61,7 +61,7 @@ const getMediaType = (path) => {
 
 // router.get("/", authMiddleware, async (req, res) => {
 //     console.log("insta_home.js 파일진입 get / 진입");
-    
+
 //     // 💡 authMiddleware를 통해 현재 로그인한 사용자 ID를 추출
 //     const currentUserId = req.user.userId;
 
@@ -75,7 +75,7 @@ const getMediaType = (path) => {
 //                 CASE WHEN L.FEED_ID IS NOT NULL THEN TRUE ELSE FALSE END AS isLiked
 //             FROM 
 //                 insta_tbl_feed F
-            
+
 //             -- 💡 2. 피드의 첫 번째 이미지(대표 이미지)를 가져오기 위한 LEFT JOIN
 //             LEFT JOIN 
 //                 insta_tbl_feed_img I
@@ -87,13 +87,13 @@ const getMediaType = (path) => {
 //                     FROM insta_tbl_feed_img
 //                     WHERE feedId = F.FEED_ID
 //                 )
-            
+
 //             -- 💡 3. 현재 사용자가 해당 피드에 좋아요를 눌렀는지 확인하기 위한 LEFT JOIN
 //             LEFT JOIN 
 //                 insta_tbl_like L
 //             ON 
 //                 F.FEED_ID = L.FEED_ID AND L.USER_ID = ?  -- 현재 사용자 ID와 일치하는 좋아요 기록만 JOIN
-            
+
 //             ORDER BY 
 //                 F.CREATED_AT DESC;
 //         `;
@@ -150,31 +150,94 @@ const getMediaType = (path) => {
 //     }
 // });
 
-router.get("/", async (req, res) => {
-    console.log("insta_home.js get / 진입");
+// router.get("/", async (req, res) => {
+//     console.log("insta_home.js get / 진입");
+//     try {
+//         let sql = `
+//             SELECT 
+//                 F.*, 
+//                 I.imgNo, 
+//                 I.ImgPath,
+//                 U.PROFILE_IMG AS USER_PROFILE_IMG,
+//                 U.USERNAME
+//             FROM insta_tbl_feed F
+//             LEFT JOIN insta_tbl_feed_img I
+//                 ON F.FEED_ID = I.feedId
+//                 AND I.imgNo = (
+//                     SELECT MIN(imgNo)
+//                     FROM insta_tbl_feed_img
+//                     WHERE feedId = F.FEED_ID
+//                 )
+//             LEFT JOIN insta_tbl_user U
+//                 ON F.USER_ID = U.USER_ID
+//             ORDER BY F.CREATED_AT DESC
+//         `;
+
+//         let [list] = await db.query(sql);
+
+//         const feedsWithMediaType = list.map(feed => ({
+//             ...feed,
+//             mediaType: getMediaType(feed.ImgPath)
+//         }));
+
+//         res.json({ list: feedsWithMediaType, result: "success" });
+//     } catch (error) {
+//         console.log("전체 피드 조회 중 에러:", error);
+//         res.status(500).json({ error: "Failed to fetch feeds" });
+//     }
+// });
+
+
+// ⭐ 이 엔드포인트에 authMiddleware를 추가하여 사용자 ID를 얻습니다.
+router.get("/", authMiddleware, async (req, res) => {
+    console.log("insta_home.js get / 진입 (좋아요 확인 기능 포함)");
+
+    // 💡 authMiddleware를 통해 현재 로그인한 사용자 ID를 추출
+    const currentUserId = req.user.userId;
+
     try {
         let sql = `
             SELECT 
                 F.*, 
                 I.imgNo, 
-                I.ImgPath,
+                I.ImgPath, 
                 U.PROFILE_IMG AS USER_PROFILE_IMG,
-                U.USERNAME
-            FROM insta_tbl_feed F
-            LEFT JOIN insta_tbl_feed_img I
-                ON F.FEED_ID = I.feedId
-                AND I.imgNo = (
+                U.USERNAME,
+                -- 💡 핵심: 현재 사용자의 좋아요 여부를 확인 (L.FEED_ID가 NULL이 아니면 좋아요를 누른 것)
+                CASE WHEN L.FEED_ID IS NOT NULL THEN TRUE ELSE FALSE END AS isLiked 
+            FROM 
+                insta_tbl_feed F
+
+            -- 1. 대표 이미지 JOIN (기존 로직 유지)
+            LEFT JOIN 
+                insta_tbl_feed_img I
+            ON 
+                F.FEED_ID = I.feedId
+            AND 
+                I.imgNo = (
                     SELECT MIN(imgNo)
                     FROM insta_tbl_feed_img
                     WHERE feedId = F.FEED_ID
                 )
+            
+            -- 2. 사용자 정보 JOIN (기존 로직 유지)
             LEFT JOIN insta_tbl_user U
                 ON F.USER_ID = U.USER_ID
-            ORDER BY F.CREATED_AT DESC
+                
+            -- 3. ⭐ 핵심: 현재 사용자의 좋아요 기록만 JOIN
+            LEFT JOIN 
+                insta_tbl_like L
+            ON 
+                F.FEED_ID = L.FEED_ID AND L.USER_ID = ?  -- 현재 사용자 ID와 일치하는 좋아요 기록만 JOIN
+            
+            ORDER BY 
+                F.CREATED_AT DESC;
         `;
 
-        let [list] = await db.query(sql);
+        // 💡 쿼리 파라미터로 현재 사용자 ID를 전달합니다.
+        let [list] = await db.query(sql, [currentUserId]);
 
+        // 기존 스타일 유지: ImagePath를 기반으로 mediaType을 계산
         const feedsWithMediaType = list.map(feed => ({
             ...feed,
             mediaType: getMediaType(feed.ImgPath)
@@ -182,10 +245,13 @@ router.get("/", async (req, res) => {
 
         res.json({ list: feedsWithMediaType, result: "success" });
     } catch (error) {
-        console.log("전체 피드 조회 중 에러:", error);
+        console.log("전체 피드 조회 중 에러발생함 ", error);
         res.status(500).json({ error: "Failed to fetch feeds" });
     }
 });
+
+
+
 
 
 
@@ -207,7 +273,7 @@ router.get("/", async (req, res) => {
 //             ORDER BY F.CREATED_AT DESC
 //         `;
 //         let [list] = await db.query(sql, [userId]);
-        
+
 //         const feedsWithMediaType = list.map(feed => {
 //             const mediaType = getMediaType(feed.ImgPath);
 //             return {
@@ -215,7 +281,7 @@ router.get("/", async (req, res) => {
 //                 mediaType: mediaType
 //             };
 //         });
-        
+
 //         res.json({
 //             list: feedsWithMediaType,
 //             result: "success"
@@ -269,34 +335,98 @@ router.get("/:userId", async (req, res) => {
 
 
 
+// router.delete("/:feedid", authMiddleware, async (req, res) => {
+//     let { feedid } = req.params;
+//     let userId = req.user.userId;
+
+//     try {
+//         // 먼저 해당 피드가 현재 사용자의 것인지 확인
+//         let checkSql = "SELECT USER_ID FROM insta_tbl_feed WHERE FEED_ID = ?";
+//         let [checkResult] = await db.query(checkSql, [feedid]);
+
+//         if (checkResult.length === 0) {
+//             return res.status(404).json({ result: "error", message: "피드를 찾을 수 없습니다." });
+//         }
+
+//         if (checkResult[0].USER_ID !== userId) {
+//             return res.status(403).json({ result: "error", message: "본인의 피드만 삭제할 수 있습니다." });
+//         }
+
+//         let sql = "DELETE FROM insta_tbl_feed WHERE FEED_ID = ?";
+//         let sql2 = "DELETE FROM insta_tbl_like WHERE FEED_ID = ?";
+//         let [list] = await db.query(sql, [feedid]);
+//         res.json({
+//             list: list,
+//             result: "success"
+//         })
+//     } catch (error) {
+//         console.log("삭제중에 에러발생함 ", error);
+//         res.status(500).json({ result: "error", message: "삭제 중 오류가 발생했습니다." });
+//     }
+// })
+
 router.delete("/:feedid", authMiddleware, async (req, res) => {
     let { feedid } = req.params;
     let userId = req.user.userId;
 
+    // 💡 트랜잭션 객체를 담을 변수 선언
+    let connection;
+
     try {
-        // 먼저 해당 피드가 현재 사용자의 것인지 확인
+        // --- 1. 피드 소유자 확인 로직 (기존 유지) ---
         let checkSql = "SELECT USER_ID FROM insta_tbl_feed WHERE FEED_ID = ?";
         let [checkResult] = await db.query(checkSql, [feedid]);
-        
+
         if (checkResult.length === 0) {
             return res.status(404).json({ result: "error", message: "피드를 찾을 수 없습니다." });
         }
-        
+
         if (checkResult[0].USER_ID !== userId) {
             return res.status(403).json({ result: "error", message: "본인의 피드만 삭제할 수 있습니다." });
         }
-        
-        let sql = "DELETE FROM insta_tbl_feed WHERE FEED_ID = ?";
-        let [list] = await db.query(sql, [feedid]);
+
+        // --- 2. 트랜잭션 시작 ---
+        // db 객체에 getConection/beginTransaction 등의 메소드가 있다고 가정합니다.
+        connection = await db.getConnection(); // 연결 가져오기
+        await connection.beginTransaction(); // 트랜잭션 시작
+
+        // --- 3. 첫 번째 DELETE: 좋아요 기록 삭제 ---
+        let sql_like = "DELETE FROM insta_tbl_like WHERE FEED_ID = ?";
+        // connection.query를 사용해 트랜잭션 내에서 쿼리 실행
+        await connection.query(sql_like, [feedid]);
+        console.log(`[Transaction] FEED_ID ${feedid}의 좋아요 기록 삭제 완료.`);
+
+        // --- 4. 두 번째 DELETE: 피드 레코드 삭제 ---
+        let sql_feed = "DELETE FROM insta_tbl_feed WHERE FEED_ID = ?";
+        let [list] = await connection.query(sql_feed, [feedid]);
+        console.log(`[Transaction] FEED_ID ${feedid}의 피드 레코드 삭제 완료.`);
+
+        // --- 5. 트랜잭션 커밋 ---
+        await connection.commit();
+
         res.json({
             list: list,
             result: "success"
-        })
+        });
+
     } catch (error) {
-        console.log("삭제중에 에러발생함 ", error);
+        // 🚨 오류 발생 시 롤백 (데이터 원상복구)
+        if (connection) {
+            await connection.rollback();
+            console.log("트랜잭션 롤백됨.");
+        }
+        console.log("삭제 중에 에러발생함 ", error);
         res.status(500).json({ result: "error", message: "삭제 중 오류가 발생했습니다." });
+    } finally {
+        // 🔗 사용한 연결 반환 (연결 풀 사용 시 필수)
+        if (connection) connection.release();
     }
-})
+});
+
+
+
+
+
 
 // router.post("/", async (req, res) => {
 //     console.log("인서트 위한 포스트통신 진입");
@@ -328,7 +458,7 @@ router.get("/:feedId/images", async (req, res) => {
             )
             ORDER BY imgNo ASC
         `;
-        const [rows] = await db.query(sql, [feedId, feedId]); 
+        const [rows] = await db.query(sql, [feedId, feedId]);
         const imagesWithMediaType = rows.map(item => ({
             ...item,
             mediaType: getMediaType(item.ImgPath)

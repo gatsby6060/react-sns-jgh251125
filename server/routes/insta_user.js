@@ -141,7 +141,8 @@ router.get("/check/email/:email", async (req, res) => {
 });
 
 // 사용자 정보 조회
-router.get("/:userId", async (req, res) => {
+router.get("/user/:userId", async (req, res) => {
+    console.log("겟방식 /user/:user진입");
     let { userId } = req.params;
 
     try {
@@ -477,6 +478,27 @@ router.put('/:userId', authMiddleware, async (req, res) => {
   }
 });
 
+
+
+// 사용자 검색 (intro 또는 username)
+router.get("/search", authMiddleware, async (req, res) => {
+    console.log("insta_user.js파일의 /search 진입");
+    try {
+        const q = req.query.q;
+
+        let sql = `
+            SELECT USER_ID, USERNAME, PROFILE_IMG, INTRO
+            FROM insta_tbl_user
+            WHERE USER_ID LIKE ? OR USERNAME LIKE ? OR INTRO LIKE ?
+        `;
+        let [rows] = await db.query(sql, [`%${q}%`, `%${q}%`, `%${q}%`]);
+
+        res.json({ result: true, users: rows });
+    } catch (err) {
+        console.log("사용자 검색 오류:", err);
+        res.json({ result: false, msg: "검색 오류 발생" });
+    }
+});
 
 
 module.exports = router;

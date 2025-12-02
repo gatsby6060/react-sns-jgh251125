@@ -11,6 +11,8 @@ const instaFeedRouter = require("./routes/insta_feed");
 const instaCommentRouter = require("./routes/insta_comment");
 const instaMessageRouter = require("./routes/insta_message");
 
+require("dotenv").config();
+
 const app = express()
 app.use(cors({
     // origin: ["http://192.168.30.45:5500","http://192.168.30.45:5501"], //여기서 들어오는건 안막겠다는 뜻

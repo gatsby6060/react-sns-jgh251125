@@ -73,7 +73,7 @@ function InstaHome() {
 
       // 1) 현재 사용자 정보(우측 요약 아바타용) 가져오기 (선택: 실패해도 진행)
       try {
-        const curRes = await fetch(`http://localhost:3010/instauser/${decoded.userId}`, {
+        const curRes = await fetch(`http://localhost:3010/instauser/user/${decoded.userId}`, {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const curData = await curRes.json();
@@ -377,7 +377,7 @@ function InstaHome() {
         })
         .catch(error => {
           console.error("삭제 중 에러:", error);
-          alert("삭제 중 오류가 발생했습니다.");
+          alert("InstaHome.js파일에서 삭제 중 오류가 발생했습니다.");
         })
     } else {
       alert("로그인 해주세요");
@@ -394,11 +394,11 @@ function InstaHome() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fafafa' }}>
-      <Box sx={{ flexGrow: 0, ml: '50px', pt: 4, px: 2 }}>
+      <Box sx={{ flexGrow: 0, ml: '260px', pt: 4, px: 2 }}>
         <Grid2 container spacing={3} justifyContent="center">
 
           {/* 2-A. 중앙 메인 피드 영역 */}
-          <Grid2 xs={12} md={7}>
+          <Grid2 xs={12} md={7} sx={{ pr: 20 }}>
             {/* 메인 피드 목록 */}
             {feeds.length > 0 ? (
               feeds.map((feed) => (
@@ -419,7 +419,7 @@ function InstaHome() {
                   {/* 피드 미디어 영역 */}
                   <Box
                     onClick={() => handleClickOpen(feed)}
-                    sx={{ cursor: 'pointer', maxHeight: '1000px', objectFit: 'cover', maxWidth: '600px' }}
+                    sx={{ cursor: 'pointer', maxHeight: '1000px', maxWidth: '600px' }} //objectFit: 'cover' 251202삭제
                   >
 
                     {feed.mediaType === 'video' ? (
@@ -452,7 +452,7 @@ function InstaHome() {
                         controls
                         muted
                         loop
-                        style={{ width: '100%', maxHeight: '600px', objectFit: 'cover' }}
+                        style={{ width: '100%', maxHeight: '700px'}} //, objectFit: 'cover' 
                       >
                         지원하지 않는 동영상 형식입니다.
                       </video>

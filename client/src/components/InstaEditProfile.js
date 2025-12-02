@@ -17,7 +17,7 @@ function InstaEditProfile() {
       return;
     }
     const decoded = jwtDecode(token);
-    fetch(`http://localhost:3010/instauser/${decoded.userId}`)
+    fetch(`http://localhost:3010/instauser/user/${decoded.userId}`)
       .then(res => res.json())
       .then(data => {
         setUser(data.user);
