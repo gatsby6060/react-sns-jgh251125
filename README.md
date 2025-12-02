@@ -1,14 +1,14 @@
 # 💬 Instagram SNS
 
-<p align="center">
+<!--<p align="center">-->
 
-  <img src="readmeIMG/snsLogo.png" alt="SNS Logo" width="300" />
+  <!--<img src="readmeIMG/snsLogo.png" alt="SNS Logo" width="300" />-->
 
-</p>
+<!--</p>-->
 
 ![전체화면](readmeIMG/전체화면.JPG)
 
-> "일상을 기록하고 공유.
+> 우리의 일상을 기록하고 공유.
 
 Instagram 스타일의 SNS로 공유를 시작해보세요."
 
