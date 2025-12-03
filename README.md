@@ -6,11 +6,14 @@
 
 <!--</p>-->
 
-![전체화면](readmeIMG/전체화면.JPG)
+<p align="center">
+  <img src="readmeIMG/전체화면.JPG" alt="전체화면" width="800" />
+</p>
+
 
 > 우리의 일상을 기록하고 공유.
 
-Instagram 스타일의 SNS로 공유를 시작해보세요."
+Instagram 스타일의 SNS로 공유를 시작해보세요.
 
 ## 💡 프로젝트 소개
 
