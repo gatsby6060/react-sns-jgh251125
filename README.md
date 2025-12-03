@@ -7,7 +7,7 @@
 <!--</p>-->
 
 <p align="center">
-  <img src="readmeIMG/전체화면1.JPG" alt="전체화면" width="800" />
+  <img src="readmeIMG/전체화면.JPG" alt="전체화면" width="800" />
 </p>
 
 
