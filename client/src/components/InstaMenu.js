@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, List, ListItem, ListItemText, Typography, Toolbar, ListItemIcon, Divider , Avatar } from '@mui/material';
-import { Home, Add, AccountCircle, Search, Explore, Send, FavoriteBorder, AddBoxOutlined, MoreHoriz} from '@mui/icons-material';
+import { Drawer, List, ListItem, ListItemText, Typography, Toolbar, ListItemIcon, Divider, Avatar } from '@mui/material';
+import { Home, Add, AccountCircle, Search, Explore, Send, FavoriteBorder, AddBoxOutlined, MoreHoriz } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
@@ -21,7 +21,7 @@ function Menu() {
 
     const userId = decoded.userId;
     if (!userId) return;
-    
+
     // 사용자 정보 가져오기
     fetch(`http://localhost:3010/instauser/user/${userId}`, {
       headers: {
@@ -44,7 +44,7 @@ function Menu() {
 
 
   const profileLink = user ? '/instaprofile' : '/instalogin';
-///instaprofile/:userId 면 `${'/instaprofile/' + user.USER_ID}`
+  ///instaprofile/:userId 면 `${'/instaprofile/' + user.USER_ID}`
 
   return (
     <Drawer
@@ -70,7 +70,11 @@ function Menu() {
         Instagram
       </Typography>
 
-      <List>
+      <List sx={{
+        '& .MuiListItem-root': {
+          py: 1.8   // 👈 여기 숫자를 늘리면 간격이 커짐 (기본은 1)
+        }
+      }}>
         {/* --- 기존 메뉴 항목 시작 (참고용) --- */}
         <ListItem button component={Link} to="/instahome">
           <ListItemIcon>
