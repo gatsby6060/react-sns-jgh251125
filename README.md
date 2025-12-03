@@ -159,7 +159,7 @@ react-sns-jgh251125/
 ```
 
 ---
-
+<!--
 ## 🚀 시작하기
 
 ### 필수 요구사항
@@ -222,6 +222,15 @@ KAKAO_REST_API_KEY=your_kakao_rest_api_key
 ```
 
 ---
+-->
+
+
+
+
+
+
+
+
 
 ## 📡 API 엔드포인트
 
