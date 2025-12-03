@@ -40,7 +40,7 @@ function App() {
       {!isAuthPage && <InstaMenu />} {/* 로그인과 회원가입 페이지가 아닐 때는 Menu 렌더링 */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Routes>
-          <Route path="/" element={<Login />} />
+          {/* <Route path="/" element={<Login />} /> 251203주석처리 */}
           <Route path="/join" element={<Join />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/register" element={<Register />} />
@@ -48,6 +48,8 @@ function App() {
           <Route path="/login2" element={<Login2 />} />
           <Route path="/mui" element={<Mui />} />
 
+          {/* /경로를 인스타로그인으로 변경 251203 */}
+          <Route path="/" element={<InstaLogin />} />
           <Route path="/instalogin" element={<InstaLogin />} />
           <Route path="/instajoin" element={<InstaJoin />} />
           <Route path="/instahome" element={<InstaHome />} />
