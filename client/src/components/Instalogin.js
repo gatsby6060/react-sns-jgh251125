@@ -201,6 +201,7 @@ function InstaLogin() {
                   />
                 </svg>
               }
+              onClick={() => alert("'페이스북 로그인'은 구현 예정입니다.")}
               sx={{ //MUI(Material UI)에서 스타일을 주는 공식적인 방법
                 mt: 1, //margin-top: theme.spacing(1) (보통 8px)
                 color: '#385898',
